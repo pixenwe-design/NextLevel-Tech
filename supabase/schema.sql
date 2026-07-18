@@ -1,0 +1,28 @@
+-- Ejecutar en Supabase SQL Editor. Nunca usar service_role en el frontend.
+create extension if not exists "pgcrypto";
+create table public.profiles (id uuid primary key references auth.users on delete cascade, full_name text, role text not null default 'customer' check(role in ('customer','admin')), created_at timestamptz default now());
+create table public.categories (id uuid primary key default gen_random_uuid(), name text not null unique, slug text not null unique, image_url text, sort_order int default 0, is_active boolean default true, created_at timestamptz default now());
+create table public.brands (id uuid primary key default gen_random_uuid(), name text not null unique, slug text not null unique, logo_url text, is_active boolean default true, created_at timestamptz default now());
+create table public.products (id uuid primary key default gen_random_uuid(), name text not null, slug text not null unique, code text unique, description text, model text, brand_id uuid references public.brands, category_id uuid references public.categories, price numeric(14,2) not null check(price>=0), sale_price numeric(14,2) check(sale_price>=0), stock int not null default 0 check(stock>=0), minimum_stock int not null default 3, is_active boolean default true, is_featured boolean default false, is_new boolean default false, is_on_sale boolean default false, sale_starts_at timestamptz, sale_ends_at timestamptz, warranty text, created_at timestamptz default now(), updated_at timestamptz default now());
+create table public.product_images (id uuid primary key default gen_random_uuid(), product_id uuid not null references public.products on delete cascade, storage_path text not null, alt_text text, sort_order int default 0, is_primary boolean default false);
+create table public.product_specs (id uuid primary key default gen_random_uuid(), product_id uuid not null references public.products on delete cascade, name text not null, value text not null, sort_order int default 0);
+create index products_category_idx on public.products(category_id); create index products_brand_idx on public.products(brand_id); create index products_active_idx on public.products(is_active);
+create or replace function public.is_admin() returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from public.profiles where id=auth.uid() and role='admin') $$;
+alter table public.profiles enable row level security; alter table public.categories enable row level security; alter table public.brands enable row level security; alter table public.products enable row level security; alter table public.product_images enable row level security; alter table public.product_specs enable row level security;
+create policy "public active categories" on public.categories for select using(is_active or public.is_admin());
+create policy "public active brands" on public.brands for select using(is_active or public.is_admin());
+create policy "public active products" on public.products for select using(is_active or public.is_admin());
+create policy "public product images" on public.product_images for select using(exists(select 1 from public.products p where p.id=product_id and p.is_active) or public.is_admin());
+create policy "public product specs" on public.product_specs for select using(exists(select 1 from public.products p where p.id=product_id and p.is_active) or public.is_admin());
+create policy "admin categories" on public.categories for all using(public.is_admin()) with check(public.is_admin());
+create policy "admin brands" on public.brands for all using(public.is_admin()) with check(public.is_admin());
+create policy "admin products" on public.products for all using(public.is_admin()) with check(public.is_admin());
+create policy "admin images" on public.product_images for all using(public.is_admin()) with check(public.is_admin());
+create policy "admin specs" on public.product_specs for all using(public.is_admin()) with check(public.is_admin());
+create policy "profile own read" on public.profiles for select using(id=auth.uid() or public.is_admin());
+create policy "admin profiles" on public.profiles for update using(public.is_admin()) with check(public.is_admin());
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('products','products',true,2097152,array['image/jpeg','image/png','image/webp']) on conflict(id) do nothing;
+create policy "public product media" on storage.objects for select using(bucket_id='products');
+create policy "admin product media insert" on storage.objects for insert with check(bucket_id='products' and public.is_admin());
+create policy "admin product media update" on storage.objects for update using(bucket_id='products' and public.is_admin());
+create policy "admin product media delete" on storage.objects for delete using(bucket_id='products' and public.is_admin());
