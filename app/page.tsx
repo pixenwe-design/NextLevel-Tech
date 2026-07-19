@@ -10,7 +10,7 @@ import {
   Warehouse, X
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
-import { categoryMatchesSelection, fetchMainCategories, fetchStoreProducts, subscribeToCatalog, type MainCategory } from "../lib/store-data";
+import { categoryMatchesSelection, fetchMainCategories, fetchStoreBrands, fetchStoreProducts, subscribeToCatalog, type MainCategory, type StoreBrand } from "../lib/store-data";
 import { deleteProduct, saveProduct, type ProductInput } from "../lib/store-admin";
 import { supabase } from "../lib/supabase";
 
@@ -143,17 +143,28 @@ function AdminCategorySelect({categories,value,onChange}:{categories:MainCategor
 }
 
 function ProductTable({items,tab,edit,duplicate,remove}:{items:Product[],tab:string,edit:(p:Product)=>void,duplicate:(p:Product)=>void,remove:(p:Product)=>void}){
- const [query,setQuery]=useState("");const [mainCategory,setMainCategory]=useState("all");const [mainCategories,setMainCategories]=useState<MainCategory[]>([]);const [filterOpen,setFilterOpen]=useState(false);const [status,setStatus]=useState("all");const [page,setPage]=useState(1);const size=10;
+ const [query,setQuery]=useState("");const [mainCategory,setMainCategory]=useState("all");const [mainCategories,setMainCategories]=useState<MainCategory[]>([]);const [brands,setBrands]=useState<StoreBrand[]>([]);const [selectedBrand,setSelectedBrand]=useState("all");const [filterOpen,setFilterOpen]=useState(false);const [status,setStatus]=useState("all");const [page,setPage]=useState(1);const size=10;
  useEffect(()=>{let active=true;const reloadCategories=()=>fetchMainCategories().then(data=>{if(active)setMainCategories(data)}).catch(error=>console.error("Admin categories:",error));reloadCategories();const unsubscribe=subscribeToCatalog(reloadCategories);return()=>{active=false;unsubscribe()}},[]);
+ useEffect(()=>{let active=true;const reloadBrands=()=>fetchStoreBrands().then(data=>{if(active)setBrands(data)}).catch(error=>console.error("Admin brands:",error));reloadBrands();const unsubscribe=subscribeToCatalog(reloadBrands);return()=>{active=false;unsubscribe()}},[]);
  const selected=mainCategories.find(category=>category.id===mainCategory);const acceptedCategories=selected?[selected.name,...selected.children]:[];
- const filtered=items.filter(p=>(tab==="Catálogo"?(mainCategory==="all"||acceptedCategories.includes(p.category)):`${p.name} ${p.code||""} ${p.brand} ${p.category}`.toLowerCase().includes(query.toLowerCase()))&&(status==="all"||(status==="active"&&p.isActive!==false)||(status==="inactive"&&p.isActive===false)||(status==="stock"&&p.stock>0)||(status==="out"&&p.stock===0)||(status==="sale"&&!!p.oldPrice)));
+ const matchesSearch=(product:Product)=>`${product.name} ${product.code||""} ${product.brand} ${product.category}`.toLowerCase().includes(query.toLowerCase());
+ const filtered=items.filter(product=>{
+  if(tab==="Catálogo")return mainCategory==="all"||acceptedCategories.includes(product.category);
+  if(!matchesSearch(product))return false;
+  if(tab==="Marcas")return selectedBrand==="all"||product.brand===selectedBrand;
+  if(tab==="Ofertas")return !!product.oldPrice&&(mainCategory==="all"||acceptedCategories.includes(product.category));
+  return status==="all"||(status==="active"&&product.isActive!==false)||(status==="inactive"&&product.isActive===false)||(status==="stock"&&product.stock>0)||(status==="out"&&product.stock===0)||(status==="sale"&&!!product.oldPrice);
+ });
  const pages=Math.max(1,Math.ceil(filtered.length/size));const current=Math.min(page,pages);const shown=filtered.slice((current-1)*size,current*size);
  return <div className="adminPanel productTable">
   <div className="panelTools">
    {tab==="Catálogo"?<AdminCategorySelect categories={mainCategories} value={mainCategory} onChange={value=>{setMainCategory(value);setPage(1)}}/>:<label><Search/><input value={query} onChange={e=>{setQuery(e.target.value);setPage(1)}} placeholder={`Buscar en ${tab.toLowerCase()}...`}/></label>}
    <button className={`secondary filterToggle ${filterOpen?"active":""}`} aria-expanded={filterOpen} aria-controls="admin-product-filters" onClick={()=>setFilterOpen(x=>!x)}><SlidersHorizontal/> Filtros</button>
   </div>
-  {filterOpen&&<div className="adminFiltersPanel" id="admin-product-filters"><label><span>Estado e inventario</span><div className="selectWrap"><select value={status} onChange={e=>{setStatus(e.target.value);setPage(1)}} aria-label="Filtrar productos por estado"><option value="all">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option><option value="stock">Con stock</option><option value="out">Agotados</option><option value="sale">En oferta</option></select><ChevronDown/></div></label><button className="clear bordered" onClick={()=>{setStatus("all");setMainCategory("all");setQuery("");setPage(1)}}><X/> Limpiar filtros</button></div>}
+  {filterOpen&&<div className="adminFiltersPanel" id="admin-product-filters">
+   {tab==="Marcas"?<label><span>Marca</span><div className="selectWrap"><select value={selectedBrand} onChange={e=>{setSelectedBrand(e.target.value);setPage(1)}} aria-label="Filtrar productos por marca"><option value="all">Todas las marcas</option>{brands.map(brand=><option value={brand.name} key={brand.id}>{brand.name}</option>)}</select><ChevronDown/></div></label>:tab==="Ofertas"?<label><span>Categoría</span><AdminCategorySelect categories={mainCategories} value={mainCategory} onChange={value=>{setMainCategory(value);setPage(1)}}/></label>:<label><span>Estado e inventario</span><div className="selectWrap"><select value={status} onChange={e=>{setStatus(e.target.value);setPage(1)}} aria-label="Filtrar productos por estado"><option value="all">Todos los estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option><option value="stock">Con stock</option><option value="out">Agotados</option><option value="sale">En oferta</option></select><ChevronDown/></div></label>}
+   <button className="clear bordered" onClick={()=>{setStatus("all");setMainCategory("all");setSelectedBrand("all");setQuery("");setPage(1)}}><X/> Limpiar filtros</button>
+  </div>}
   <div className="tableScroll"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Marca</th><th>Stock</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{shown.map(p=><tr key={p.id}><td><div className="tableProd"><img src={p.image} alt=""/><b>{p.name}<small>{p.code||`NL-${String(p.id).padStart(4,"0")}`}</small></b></div></td><td>{p.category}</td><td>{p.brand}</td><td><b>{p.stock}</b></td><td><b>{gs(p.price)}</b>{p.oldPrice&&<small><del>{gs(p.oldPrice)}</del></small>}</td><td><span className={p.isActive===false?"low":"ok"}>{p.isActive===false?<X/>:<Check/>} {p.isActive===false?"Inactivo":"Activo"}</span></td><td><div className="tableActions"><button onClick={()=>edit(p)} title="Editar producto"><Edit3/></button><button onClick={()=>duplicate(p)} title="Duplicar producto"><Copy/></button><button onClick={()=>remove(p)} className="danger" title="Archivar producto"><Trash2/></button></div></td></tr>)}</tbody></table>{!shown.length&&<div className="empty"><Search/><b>No hay productos para este filtro</b></div>}</div>
   <div className="pagination"><span>Mostrando {shown.length?`${(current-1)*size+1}–${(current-1)*size+shown.length}`:"0"} de {filtered.length} productos</span><div><button disabled={current===1} onClick={()=>setPage(p=>p-1)}><ChevronLeft/></button>{Array.from({length:pages},(_,i)=><button key={i} className={current===i+1?"active":""} onClick={()=>setPage(i+1)}>{i+1}</button>)}<button disabled={current===pages} onClick={()=>setPage(p=>p+1)}><ChevronRight/></button></div></div>
  </div>

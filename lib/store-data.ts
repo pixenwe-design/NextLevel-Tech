@@ -92,6 +92,7 @@ export async function fetchStoreProducts(includeInactive = false): Promise<Produ
 }
 
 export type MainCategory={id:string;name:string;slug:string;children:string[]};
+export type StoreBrand={id:string;name:string;slug:string};
 const fallbackCategoryChildren:Record<string,string[]>={
   Consolas:["PlayStation","Xbox","Nintendo"],
   Periféricos:["Teclados","Mouse","Auriculares","Accesorios","Sillas gamer"],
@@ -120,12 +121,22 @@ export async function fetchMainCategories():Promise<MainCategory[]>{
   return (data||[]).map(category=>({...category,children:(category.children||[]).map(child=>child.name)}));
 }
 
+export async function fetchStoreBrands():Promise<StoreBrand[]>{
+  const {data,error}=await supabase.from("brands")
+    .select("id,name,slug")
+    .eq("is_active",true)
+    .order("name",{ascending:true});
+  if(error)throw error;
+  return data||[];
+}
+
 export function subscribeToCatalog(onChange:()=>void){
   const channel=supabase.channel(`catalog-${crypto.randomUUID()}`)
     .on("postgres_changes",{event:"*",schema:"public",table:"products"},onChange)
     .on("postgres_changes",{event:"*",schema:"public",table:"product_images"},onChange)
     .on("postgres_changes",{event:"*",schema:"public",table:"product_specs"},onChange)
     .on("postgres_changes",{event:"*",schema:"public",table:"categories"},onChange)
+    .on("postgres_changes",{event:"*",schema:"public",table:"brands"},onChange)
     .subscribe();
   return ()=>{void supabase.removeChannel(channel)};
 }
