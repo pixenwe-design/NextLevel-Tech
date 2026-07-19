@@ -48,6 +48,41 @@ body{font-size:15px;line-height:1.55}.iconBtn{display:inline-grid;place-items:ce
   .catalogResultsBar .sorter{align-items:stretch;flex-direction:column;gap:7px;width:100%}
   .catalogResultsBar .sortControl,.catalogResultsBar .sortControl select{width:100%}
 }
+.mobileCatalogBar{display:contents}.mobileFilterButton,.mobileFilterClose,.mobileApplyFilters,.mobileFilterOverlay{display:none}
+
+@media(max-width:600px){
+  #catalogo{padding-left:0;padding-right:0;padding-bottom:90px}
+  #catalogo>.sectionHead{padding:0 16px}
+  .catalog{display:block}
+  .listing{min-width:0}
+  .catalogQuickFilters{width:100%;max-width:100vw;gap:8px;margin-bottom:14px;padding:0 16px 5px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%)}
+  .catalogQuickFilters::-webkit-scrollbar{display:none}
+  .catalogQuickFilters button,.chips button:nth-child(n+3){display:inline-flex!important;flex:0 0 auto;white-space:nowrap;scroll-snap-align:start}
+  .catalogResultsBar{gap:10px;margin:0 16px 26px;padding-bottom:14px}
+  .catalogResultsBar>strong{width:100%;font-size:14px}
+  .mobileCatalogBar{width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:8px}
+  .mobileFilterButton{height:42px;display:flex;align-items:center;justify-content:center;gap:7px;position:relative;border:1px solid #344158;border-radius:9px;background:#151d2a;color:#eef2ff;font-size:12px;font-weight:700}
+  .mobileFilterButton svg{width:16px}
+  .mobileFilterButton em{position:absolute;right:-5px;top:-7px;min-width:19px;height:19px;padding:0 5px;display:grid;place-items:center;border-radius:12px;background:#7047f5;color:#fff;font-size:10px;font-style:normal;box-shadow:0 4px 12px #7047f566}
+  .catalogResultsBar .sorter{display:block;width:100%}
+  .catalogResultsBar .sorter>span:first-child{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .catalogResultsBar .sortControl,.catalogResultsBar .sortControl select{height:42px}
+  .catalog .filterPanel{display:block!important;position:fixed!important;z-index:90;left:0;right:0;bottom:0;top:auto;width:100%;max-height:min(88dvh,720px);margin:0;padding:20px 18px 24px!important;overflow-y:auto;border-radius:18px 18px 0 0!important;transform:translateY(105%);visibility:hidden;pointer-events:none;transition:transform .25s ease,visibility .25s;box-shadow:0 -24px 70px #000b}
+  .catalog .filterPanel.mobileOpen{transform:translateY(0);visibility:visible;pointer-events:auto}
+  .filterPanel .filterTitle{position:sticky;top:-20px;z-index:2;margin:-20px -18px 8px;padding:18px;border-radius:18px 18px 0 0;background:#0f141f}
+  .mobileFilterClose{display:grid;margin-left:auto;color:#dce3ef}
+  .filterPanel .range{grid-template-columns:1fr 1fr}
+  .filterPanel .bordered{margin-top:20px}
+  .mobileApplyFilters{display:flex;width:100%;margin-top:10px}
+  .mobileFilterOverlay{display:block;position:fixed;z-index:85;inset:0;border:0;background:#02050bc7;backdrop-filter:blur(3px)}
+  .listing .products{grid-template-columns:1fr;gap:16px;padding:0 16px}
+  .listing .product{width:100%;padding-bottom:5px}
+  .listing .pic{height:245px}
+  .listing .pcopy{padding:17px}
+  .listing .pcopy h3{font-size:16px;min-height:auto}
+  .listing .actions{padding-bottom:4px}
+  body:has(#catalogo) .floatWa{display:none!important}
+}
 .adminSelectMenu{position:absolute;left:0;right:0;top:calc(100% + 8px);padding:7px;border:1px solid #344158;border-radius:11px;background:#111824;box-shadow:0 20px 55px #000a,0 0 0 1px #ffffff05;overflow:hidden;animation:adminSelectIn .14s ease-out}
 .adminSelectMenu button{width:100%;min-height:40px;padding:0 11px;display:flex;align-items:center;justify-content:space-between;border:0;border-radius:7px;background:transparent;color:#dce3ef;font-size:13px;text-align:left;transition:background .14s,color .14s}.adminSelectMenu button:hover,.adminSelectMenu button:focus-visible{outline:0;background:#222b3c;color:#fff}.adminSelectMenu button.selected{background:linear-gradient(135deg,#7047f5,#5d42d6);color:#fff;font-weight:750;box-shadow:0 6px 18px #6542e33d}.adminSelectMenu button.selected:hover{background:linear-gradient(135deg,#7d5af8,#684ce0)}.adminSelectMenu button svg{width:16px;color:#fff}
 @keyframes adminSelectIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
