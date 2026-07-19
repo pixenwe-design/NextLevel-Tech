@@ -254,3 +254,53 @@ body{font-size:15px;line-height:1.55}.iconBtn{display:inline-grid;place-items:ce
  .toplineGroup:first-child .toplineItem:last-child i{display:none}
  .toplineGroup:nth-child(2){display:none}
 }
+
+/* Related products: touch carousel on phones */
+.relatedCarousel{position:relative}
+.relatedSwipeHint{display:none}
+@media(max-width:767px){
+ .products.related{
+  display:flex;
+  grid-template-columns:none;
+  gap:12px;
+  overflow-x:auto;
+  overscroll-behavior-inline:contain;
+  padding:3px 28px 14px 1px;
+  scroll-padding-inline:1px 28px;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+ }
+ .products.related::-webkit-scrollbar{display:none}
+ .products.related>.product{
+  display:flex;
+  flex:0 0 84%;
+  min-width:0;
+  height:auto;
+  min-height:410px;
+  flex-direction:column;
+  scroll-snap-align:start;
+  scroll-snap-stop:normal;
+ }
+ .products.related .pic{height:190px;flex:0 0 190px}
+ .products.related .pcopy{display:flex;flex:1;flex-direction:column}
+ .products.related .pcopy h3{min-height:42px}
+ .products.related .actions{margin-top:auto}
+ .products.related .actions a{display:flex;width:100%;min-height:38px;align-items:center;justify-content:space-between}
+ .relatedSwipeHint{
+  position:absolute;
+  z-index:3;
+  top:3px;
+  right:-1px;
+  bottom:14px;
+  display:flex;
+  width:44px;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right:5px;
+  background:linear-gradient(90deg,transparent,#080b12de 72%);
+  color:#aa96ff;
+  font-size:25px;
+  pointer-events:none;
+ }
+}
