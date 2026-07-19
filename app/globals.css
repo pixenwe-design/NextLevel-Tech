@@ -189,3 +189,44 @@ body{font-size:15px;line-height:1.55}.iconBtn{display:inline-grid;place-items:ce
 /* Refined category layout */
 .categoryMain{padding-top:28px;max-width:1280px}.categoryHero{height:285px;padding:0;margin:0 0 20px;position:relative;overflow:hidden;border:1px solid #303b50;border-radius:18px;background:#111824}.categoryHeroImage{position:absolute;inset:0 0 0 auto;width:52%;height:100%;object-fit:cover;object-position:center;filter:saturate(.82) contrast(1.04) brightness(.78)}.categoryHeroShade{position:absolute;inset:0;background:linear-gradient(90deg,#0e151f 0%,#0e151ff5 42%,#0e151f76 68%,#0e151f21 100%)}.categoryHeroContent{position:relative;z-index:1;height:100%;padding:25px 30px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}.categoryHeroTop{position:absolute;left:30px;right:30px;top:22px;display:flex;align-items:center;justify-content:space-between}.breadcrumb{display:flex;align-items:center;gap:8px;color:#8e9aae;font-size:11px}.breadcrumb a{color:#aab5c7;text-decoration:none}.breadcrumb i{font-style:normal;color:#4f5c70}.breadcrumb b{color:#dce2ec}.categoryBack{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px;border:1px solid #3a465b;border-radius:8px;background:#101722d9;color:#c8d0dd;text-decoration:none;font-size:11px;font-weight:700;transition:.2s}.categoryBack svg{width:15px}.categoryBack:hover{border-color:#7256df;background:#181f30;color:#fff;transform:translateX(-2px)}.categoryHero h1{font-size:45px;margin:22px 0 4px}.categoryHero p{max-width:560px;margin:0 0 12px;font-size:14px;line-height:1.6}.categoryHero strong{font-size:12px;padding:6px 10px;border-radius:20px;background:#7047f51d;color:#b9a8ff;border:1px solid #8063ed30}.categoryTabs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px;overflow:visible;padding:13px;margin:0 0 26px;background:#0e141e;border:1px solid var(--line);border-radius:14px}.categoryTabs button{width:100%;padding:11px 8px;border-radius:9px;font-size:12px;text-align:center}.categoryTabs button.active{box-shadow:0 8px 24px #6842e72e}.categoryCatalog{grid-template-columns:250px 1fr;gap:28px}.categoryCatalog>aside{padding:25px}.categoryCatalog>aside h2{font-size:18px;padding-bottom:18px;border-bottom:1px solid var(--line)}.categoryCatalog>aside>label{font-size:13px;margin:19px 0;font-weight:650}.categoryCatalog>aside .check{height:42px;margin:7px 0;padding:0 10px;border:1px solid #273246;border-radius:9px;background:#121924;transition:.2s}.categoryCatalog>aside .check:hover{border-color:#46536c;background:#151d2a}.categoryCatalog>aside .check>span{flex:0 0 19px;width:19px;height:19px}.categoryCatalog>aside .bordered{min-height:44px;margin-top:21px;background:#191f2b!important;border-color:#465269!important;color:#d8dfeb}.categoryCatalog>aside .bordered:hover{border-color:#7659e8!important;background:#201b35!important}.categoryToolbar{min-height:55px}
 @media(max-width:900px){.categoryHeroImage{width:60%}.categoryTabs{grid-template-columns:repeat(7,minmax(105px,1fr));overflow-x:auto}.categoryCatalog{grid-template-columns:220px 1fr}}@media(max-width:700px){.categoryHero{height:300px}.categoryHeroImage{width:100%;opacity:.58}.categoryHeroShade{background:linear-gradient(90deg,#0d141ff3,#0d141f91)}.categoryHeroContent{padding:22px}.categoryHeroTop{left:22px;right:22px}.breadcrumb{display:none}.categoryHero h1{font-size:36px;margin-top:30px}.categoryBack{margin-left:auto}.categoryTabs{display:none}.categoryCatalog>aside .check{display:flex}.categoryMain{padding-top:15px}}@media(max-width:420px){.categoryHero{height:320px}.categoryHero h1{font-size:32px}.categoryHero p{font-size:13px}}
+
+/* Compact product header for phones */
+.mobileProductHeaderNav{display:none}
+@media(max-width:767px){
+ .productHeaderSection{width:100%;padding:8px 12px 0}
+ .mobileProductHeaderNav{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:38px;margin:0 0 8px}
+ .mobileProductBack{display:inline-flex;flex:0 0 auto;align-items:center;gap:7px;min-height:36px;padding:0 12px;border:1px solid rgba(151,161,192,.22);border-radius:10px;background:rgba(13,17,30,.82);color:#f3f5ff;font-size:14px;font-weight:700}
+ .mobileProductBack svg{width:16px;height:16px;color:#9c75ff}
+ .mobileProductHeaderNav nav{display:flex;min-width:0;align-items:center;justify-content:flex-end;gap:5px;color:#939bb1;font-size:12px;white-space:nowrap;overflow:hidden}
+ .mobileProductHeaderNav nav a{color:#c8cede}
+ .mobileProductHeaderNav nav svg{width:13px;height:13px;flex:0 0 auto;color:#646d86}
+ .mobileProductHeaderNav nav span{min-width:0;overflow:hidden;color:#fff;font-weight:700;text-overflow:ellipsis}
+ .productHeaderSection .productHeader.productHero{height:222px;min-height:222px;margin:0 0 72px;overflow:visible;border-radius:18px}
+ .productHeaderSection .productHeader .productHeroInner{position:relative;display:block;height:222px;min-height:222px;padding:20px 18px;overflow:visible;border-radius:inherit}
+ .productHeaderSection .productHeroGrid,.productHeaderSection .productHeaderBeam,.productHeaderSection .productHeaderCircuits,.productHeaderSection .headerTechTag,.productHeaderSection .headerProductFrame>span{display:none}
+ .productHeaderSection .productHeaderCopy{position:relative;z-index:3;min-height:0}
+ .productHeaderSection .headerBackLink,.productHeaderSection .productBreadcrumb{display:none}
+ .productHeaderSection .productHeroLabel{padding:5px 9px;font-size:11px;letter-spacing:.12em}
+ .productHeaderSection .productHeader h2{max-width:100%;margin:12px 0 9px;padding:0;font-size:32px;line-height:1.04;letter-spacing:-1.15px}
+ .productHeaderSection .productHeader .productHeaderCopy>p{display:-webkit-box;max-width:64%;margin:0;overflow:hidden;color:#b8bed0;font-size:14px;line-height:1.38;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+ .productHeaderSection .productHeaderRight{position:static;display:block}
+ .productHeaderSection .productHeaderRight .productHeaderVisual{position:absolute;z-index:1;right:-10px;bottom:-4px;width:39%;height:112px;min-height:0;margin:0;opacity:.92;pointer-events:none}
+ .productHeaderSection .productHeaderRight .headerProductHalo{inset:9% -12% -18%;filter:blur(22px);opacity:.72}
+ .productHeaderSection .productHeaderRight .headerProductFrame{width:100%;height:100%;min-height:0;border:0;background:transparent;box-shadow:none;transform:none;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 100%);mask-image:linear-gradient(90deg,transparent 0,#000 18%,#000 100%)}
+ .productHeaderSection .productHeaderRight .headerProductFrame img{width:116%;height:116%;max-width:none;object-fit:contain;object-position:right bottom;transform:none}
+ .productHeaderSection .productHeaderRight .productHeaderBenefits{position:absolute;z-index:5;top:230px;left:0;display:flex;width:100%;min-height:62px;gap:8px;padding:0 2px 4px;overflow-x:auto;border:0;border-radius:0;background:transparent;box-shadow:none;scrollbar-width:none}
+ .productHeaderSection .productHeaderRight .productHeaderBenefits::-webkit-scrollbar{display:none}
+ .productHeaderSection .productHeaderBenefits article{display:flex;flex:1 0 104px;min-width:104px;min-height:58px;align-items:center;gap:7px;padding:9px 8px;border:1px solid rgba(144,153,184,.18);border-radius:12px;background:linear-gradient(145deg,rgba(18,23,39,.96),rgba(8,11,22,.96));box-shadow:0 8px 22px rgba(0,0,0,.22)}
+ .productHeaderSection .productHeaderBenefits article+article{border-left:1px solid rgba(144,153,184,.18)}
+ .productHeaderSection .productHeaderBenefits article>span{display:grid;width:27px;height:27px;flex:0 0 27px;border-radius:8px}
+ .productHeaderSection .productHeaderBenefits article>span svg{width:16px;height:16px}
+ .productHeaderSection .productHeaderBenefits b{display:block;font-size:10px;line-height:1.15}
+ .productHeaderSection .productHeaderBenefits small{display:none}
+ .productHeaderSection+.detail.section{padding-top:10px}
+}
+@media(max-width:374px){
+ .productHeaderSection{padding-inline:10px}
+ .mobileProductHeaderNav nav{font-size:11px}
+ .productHeaderSection .productHeader h2{font-size:32px}
+ .productHeaderSection .productHeader .productHeaderCopy>p{max-width:61%;font-size:14px}
+}

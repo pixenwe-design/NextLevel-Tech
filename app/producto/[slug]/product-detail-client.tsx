@@ -21,9 +21,16 @@ export default function ProductDetail({slug}:{slug:string}){
  if(loading)return <main className="detail section"><div className="empty"><b>Cargando producto…</b></div></main>;
  if(!product)return <main className="detail section"><div className="empty"><b>Producto no encontrado</b><p>El producto solicitado no existe o ya no está disponible.</p><Link className="primary" href="/">Volver a la tienda</Link></div></main>;
  const whatsapp=()=>window.open(`https://wa.me/595985993848?text=${encodeURIComponent(`Hola NextLevel Tech, quiero comprar:\n• ${product.name} — ${gs(product.price)}`)}`,"_blank");
+ const mobileCategory=mainCategoryName(product.category,mainCategories);
 
  return <>
   <div className="productHeaderSection">
+  <div className="mobileProductHeaderNav">
+   <Link className="mobileProductBack" href="/"><ArrowLeft/> Volver</Link>
+   <nav aria-label="Ruta de navegación resumida">
+    <Link href="/">Productos</Link><ChevronRight/><span>{mobileCategory}</span>
+   </nav>
+  </div>
   <section className="productHero productHeader">
    <div className="productHeroGrid"/>
    <div className="productHeaderBeam"/>
