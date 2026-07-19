@@ -26,15 +26,23 @@ export default function ProductDetail({slug}:{slug:string}){
    <div className="productHeaderBeam"/>
    <div className="productHeaderCircuits"><i/><i/><i/><i/></div>
    <div className="productHeroInner">
-    <span className="productHeroLabel">NEXTLEVEL TECH</span>
-    <h2>Tecnología que potencia tu setup</h2>
-    <p>Equipos, componentes y accesorios seleccionados para llevar tu rendimiento al siguiente nivel.</p>
-    <nav className="productBreadcrumb" aria-label="Ruta de navegación">
-     <Link href="/"><ArrowLeft/> Inicio</Link><ChevronRight/>
-     <Link href="/">Productos</Link><ChevronRight/>
-     <span>{product.category}</span><ChevronRight/>
-     <b>{product.name}</b>
-    </nav>
+    <div className="productHeaderCopy">
+     <span className="productHeroLabel">NEXTLEVEL TECH</span>
+     <h2>Tecnología que impulsa tu rendimiento</h2>
+     <p>Componentes, equipos y accesorios seleccionados para crear un setup más potente.</p>
+     <nav className="productBreadcrumb" aria-label="Ruta de navegación">
+      <Link href="/"><ArrowLeft/> Inicio</Link><ChevronRight/>
+      <Link href="/">Productos</Link><ChevronRight/>
+      <span>{product.category}</span><ChevronRight/>
+      <b>{product.name}</b>
+     </nav>
+    </div>
+    <div className="productHeaderVisual" aria-hidden="true">
+     <div className="visualPanel visualPanelBack"><img src={product.image} alt=""/></div>
+     <div className="visualPanel visualPanelMain"><span className="visualCode">NL // PERFORMANCE</span><img src={product.image} alt=""/></div>
+     <div className="visualChip"><i/><span>SELECTED<br/><b>HARDWARE</b></span></div>
+     <div className="trustFloat"><span><Truck/></span><div><b>Envíos a todo Paraguay</b><small>Garantía oficial · Compra segura</small></div></div>
+    </div>
    </div>
   </section>
   <main className="detail section">
