@@ -27,6 +27,27 @@ body{font-size:15px;line-height:1.55}.iconBtn{display:inline-grid;place-items:ce
 .panelTools .adminCategorySelect{position:relative;width:min(420px,100%);z-index:12}
 .adminSelectTrigger{width:100%;height:44px;padding:0 13px;display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:#f4f6fb;box-shadow:0 8px 24px #0002;font-size:13px;font-weight:650;text-align:left;transition:border-color .18s,box-shadow .18s,background .18s}
 .adminSelectTrigger:hover,.adminCategorySelect.open .adminSelectTrigger{border-color:#7659e8;background:#182131;box-shadow:0 0 0 3px #7047f516,0 10px 28px #0004}.adminSelectTrigger:focus-visible{outline:2px solid #8b72f7;outline-offset:2px}.adminSelectTrigger>svg:first-child{width:18px;color:#9a83ff}.adminSelectTrigger>span{flex:1}.adminSelectArrow{width:17px;color:#8794aa;transition:transform .18s}.adminCategorySelect.open .adminSelectArrow{transform:rotate(180deg);color:#ad9cff}
+
+/* Compact catalog results header */
+.catalogQuickFilters{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 16px}
+.catalogQuickFilters button{font-size:13px;padding:10px 18px}
+.catalogResultsBar{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:44px;margin:0 0 28px;padding:0 0 14px;border-bottom:1px solid var(--line)}
+.catalogResultsBar>strong{color:#e8edf7;font:600 14px Space Grotesk;text-align:left;white-space:nowrap}
+.catalogResultsBar .sorter{display:flex;align-items:center;gap:10px;margin:0;color:var(--muted);font-size:12px}
+.sortControl{position:relative;display:block;width:178px}
+.catalogResultsBar .sortControl select{width:100%;min-width:0;height:40px;padding:0 36px 0 12px;appearance:none;background:#111824;border:1px solid var(--line);border-radius:9px;color:#e8edf7;font-size:12px}
+.catalogResultsBar .sortControl select:hover{border-color:#4a5870;background:#151d2a}
+.catalogResultsBar .sortControl select:focus{outline:2px solid #7659e855;outline-offset:1px;border-color:#7659e8}
+.catalogResultsBar .sortControl svg{position:absolute;right:11px;top:50%;width:15px;transform:translateY(-50%);pointer-events:none;color:#8794aa}
+
+@media(max-width:600px){
+  .catalogQuickFilters{margin-bottom:14px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}
+  .catalogQuickFilters button{white-space:nowrap}
+  .catalogResultsBar{align-items:stretch;flex-direction:column;gap:10px;min-height:0;margin-bottom:24px;padding-bottom:16px}
+  .catalogResultsBar>strong{font-size:14px}
+  .catalogResultsBar .sorter{align-items:stretch;flex-direction:column;gap:7px;width:100%}
+  .catalogResultsBar .sortControl,.catalogResultsBar .sortControl select{width:100%}
+}
 .adminSelectMenu{position:absolute;left:0;right:0;top:calc(100% + 8px);padding:7px;border:1px solid #344158;border-radius:11px;background:#111824;box-shadow:0 20px 55px #000a,0 0 0 1px #ffffff05;overflow:hidden;animation:adminSelectIn .14s ease-out}
 .adminSelectMenu button{width:100%;min-height:40px;padding:0 11px;display:flex;align-items:center;justify-content:space-between;border:0;border-radius:7px;background:transparent;color:#dce3ef;font-size:13px;text-align:left;transition:background .14s,color .14s}.adminSelectMenu button:hover,.adminSelectMenu button:focus-visible{outline:0;background:#222b3c;color:#fff}.adminSelectMenu button.selected{background:linear-gradient(135deg,#7047f5,#5d42d6);color:#fff;font-weight:750;box-shadow:0 6px 18px #6542e33d}.adminSelectMenu button.selected:hover{background:linear-gradient(135deg,#7d5af8,#684ce0)}.adminSelectMenu button svg{width:16px;color:#fff}
 @keyframes adminSelectIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
