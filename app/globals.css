@@ -193,15 +193,16 @@ body{font-size:15px;line-height:1.55}.iconBtn{display:inline-grid;place-items:ce
 /* Compact product header for phones */
 .mobileProductHeaderNav{display:none}
 @media(max-width:767px){
- .productHeaderSection{width:100%;padding:8px 12px 0}
- .mobileProductHeaderNav{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:38px;margin:0 0 8px}
+ .productHeaderSection{width:100%;padding:8px 12px 0;overflow-x:clip}
+ .mobileProductHeaderNav{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;margin:0;padding:5px;border:1px solid rgba(151,161,192,.18);border-radius:13px;background:linear-gradient(145deg,rgba(17,22,37,.96),rgba(8,11,22,.96));box-shadow:0 8px 22px rgba(0,0,0,.18);overflow-x:auto;scrollbar-width:none}
+ .mobileProductHeaderNav::-webkit-scrollbar{display:none}
  .mobileProductBack{display:inline-flex;flex:0 0 auto;align-items:center;gap:7px;min-height:36px;padding:0 12px;border:1px solid rgba(151,161,192,.22);border-radius:10px;background:rgba(13,17,30,.82);color:#f3f5ff;font-size:14px;font-weight:700}
  .mobileProductBack svg{width:16px;height:16px;color:#9c75ff}
- .mobileProductHeaderNav nav{display:flex;min-width:0;align-items:center;justify-content:flex-end;gap:5px;color:#939bb1;font-size:12px;white-space:nowrap;overflow:hidden}
+ .mobileProductHeaderNav nav{display:flex;min-width:max-content;align-items:center;justify-content:flex-start;gap:5px;color:#939bb1;font-size:12px;white-space:nowrap}
  .mobileProductHeaderNav nav a{color:#c8cede}
  .mobileProductHeaderNav nav svg{width:13px;height:13px;flex:0 0 auto;color:#646d86}
- .mobileProductHeaderNav nav span{min-width:0;overflow:hidden;color:#fff;font-weight:700;text-overflow:ellipsis}
- .productHeaderSection .productHeader.productHero{height:222px;min-height:222px;margin:0 0 72px;overflow:visible;border-radius:18px}
+ .mobileProductHeaderNav nav span{display:inline-flex;align-items:center;min-height:30px;padding:0 9px;border:1px solid rgba(126,93,239,.35);border-radius:8px;background:rgba(112,71,245,.14);color:#d9d1ff;font-weight:800}
+ .productHeaderSection .productHeader.productHero{height:222px;min-height:222px;margin:0 0 80px;overflow:visible;border-radius:18px}
  .productHeaderSection .productHeader .productHeroInner{position:relative;display:block;height:222px;min-height:222px;padding:20px 18px;overflow:visible;border-radius:inherit}
  .productHeaderSection .productHeroGrid,.productHeaderSection .productHeaderBeam,.productHeaderSection .productHeaderCircuits,.productHeaderSection .headerTechTag,.productHeaderSection .headerProductFrame>span{display:none}
  .productHeaderSection .productHeaderCopy{position:relative;z-index:3;min-height:0}

@@ -25,12 +25,6 @@ export default function ProductDetail({slug}:{slug:string}){
 
  return <>
   <div className="productHeaderSection">
-  <div className="mobileProductHeaderNav">
-   <Link className="mobileProductBack" href="/"><ArrowLeft/> Volver</Link>
-   <nav aria-label="Ruta de navegación resumida">
-    <Link href="/">Productos</Link><ChevronRight/><span>{mobileCategory}</span>
-   </nav>
-  </div>
   <section className="productHero productHeader">
    <div className="productHeroGrid"/>
    <div className="productHeaderBeam"/>
@@ -58,6 +52,12 @@ export default function ProductDetail({slug}:{slug:string}){
     </div>
    </div>
   </section>
+  <div className="mobileProductHeaderNav">
+   <Link className="mobileProductBack" href="/"><ArrowLeft/> Volver</Link>
+   <nav aria-label="Ruta de navegación resumida">
+    <Link href="/">Productos</Link><ChevronRight/><span>{mobileCategory}</span>
+   </nav>
+  </div>
   </div>
   <main className="detail section">
    <div className="detailGrid">
