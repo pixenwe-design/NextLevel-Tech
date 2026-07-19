@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { fetchStoreProducts, subscribeToCatalog } from "../lib/store-data";
-import { deleteProduct, saveProduct, type ProductInput } from "../lib/store-admin";
+import { deleteProduct, runControlledAdminTest, saveProduct, type ProductInput } from "../lib/store-admin";
 import { supabase } from "../lib/supabase";
 
 export type Product = {
@@ -131,6 +131,7 @@ type Preview={id:string,url:string,name:string,main:boolean,file?:File,storagePa
 function ProductForm({product,onClose,onSaved}:{product:Product|null,onClose:()=>void,onSaved:()=>void}){
  const [previews,setPreviews]=useState<Preview[]>(product?(product.images?.map(x=>({id:x.id,url:x.url,name:x.storagePath.split("/").pop()||"Imagen",main:x.isPrimary,storagePath:x.storagePath}))||[{id:"existing",url:product.image,name:"Imagen actual",main:true}]):[]);
  const [busy,setBusy]=useState(false);const [error,setError]=useState("");
+ const [testState,setTestState]=useState<"idle"|"running"|"done">("idle");
  const [defaultCode]=useState(()=>`NL-${Date.now().toString().slice(-6)}`);
  const addFiles=(files:FileList|File[])=>{const incoming=Array.from(files).filter(f=>f.type.startsWith("image/")).map((f,i)=>({id:`${Date.now()}-${i}`,url:URL.createObjectURL(f),name:f.name,main:previews.length===0&&i===0,file:f}));setPreviews(x=>[...x,...incoming])};
  const move=(index:number,dir:number)=>setPreviews(x=>{const n=[...x],target=index+dir;if(target<0||target>=n.length)return x;[n[index],n[target]]=[n[target],n[index]];return n});
@@ -142,7 +143,7 @@ function ProductForm({product,onClose,onSaved}:{product:Product|null,onClose:()=
  <FormSection icon={<Edit3/>} title="Descripción"><div className="formGrid"><label className="span2">Descripción completa<textarea name="description" required defaultValue={product?.description||""} placeholder="Características, beneficios y detalles del producto."/></label><label className="span2">Garantía<input name="warranty" defaultValue={product?.warranty||"12 meses"}/></label></div></FormSection>
  <FormSection icon={<ImagePlus/>} title="Imágenes del producto"><ImageManager previews={previews} setPreviews={setPreviews} addFiles={addFiles} move={move}/></FormSection>
  <FormSection icon={<SlidersHorizontal/>} title="Estado y visibilidad"><div className="switchGrid"><Switch name="isActive" label="Producto activo" description="Visible y disponible en la tienda" checked={product?.isActive!==false}/><Switch name="isFeatured" label="Producto destacado" description="Aparece en secciones principales" checked={product?.featured}/><Switch name="isNew" label="Producto nuevo" description="Muestra la etiqueta Nuevo" checked={product?.isNew}/><Switch name="isOnSale" label="Producto en oferta" description="Activa el precio promocional" checked={!!product?.oldPrice}/></div></FormSection></div>
- {error&&<p className="loginError">{error}</p>}<div className="formActions"><button type="button" className="secondary" onClick={onClose}>Cancelar</button><button disabled={busy} className="primary"><Check/> {busy?"Guardando...":"Guardar producto"}</button></div></form></div>
+ {error&&<p className="loginError">{error}</p>}<div className="formActions">{!product&&<button type="button" className="secondary" disabled={testState!=="idle"} onClick={async()=>{setTestState("running");setError("");try{await runControlledAdminTest();setTestState("done");window.dispatchEvent(new Event("products-changed"))}catch(err){setError(err instanceof Error?err.message:"La prueba falló");setTestState("idle")}}}>{testState==="running"?"Ejecutando prueba...":testState==="done"?"Prueba completada ✓":"Ejecutar prueba controlada"}</button>}<button type="button" className="secondary" onClick={onClose}>Cancelar</button><button disabled={busy} className="primary"><Check/> {busy?"Guardando...":"Guardar producto"}</button></div></form></div>
 }
 function FormSection({icon,title,children}:{icon:React.ReactNode,title:string,children:React.ReactNode}){return <section className="formSection"><header><span>{icon}</span><h3>{title}</h3></header>{children}</section>}
 function Switch({name,label,description,checked=false}:{name:string,label:string,description:string,checked?:boolean}){const [on,setOn]=useState(!!checked);return <label className="switchRow"><input name={name} type="checkbox" checked={on} onChange={e=>setOn(e.target.checked)} hidden/><span><b>{label}</b><small>{description}</small></span><i className={on?"on":""}><em/></i></label>}
