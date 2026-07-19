@@ -47,9 +47,18 @@ export async function saveProduct(current:Product|null,input:ProductInput){
 
 export async function deleteProduct(product:Product){
   if(!product.dbId)fail("Este producto pertenece al respaldo demo y no existe en Supabase");
-  const paths=(product.images||[]).map(x=>x.storagePath).filter(path=>path.startsWith(`${product.dbId}/`));
-  if(paths.length){const {error}=await supabase.storage.from("product-images").remove(paths);if(error)fail("No se pudieron eliminar los archivos",error)}
-  const {error}=await supabase.from("products").delete().eq("id",product.dbId);if(error)fail("No se pudo eliminar el producto",error);
+  const {error}=await supabase.from("products").update({is_active:false,deleted_at:new Date().toISOString()}).eq("id",product.dbId);
+  if(error)fail("No se pudo archivar el producto",error);
+}
+
+async function purgeControlledTestProducts(){
+  const found=await supabase.from("products").select("id,code,product_images(storage_path)").like("code","PRUEBA-CODEX%");
+  if(found.error)fail("No se pudieron localizar residuos temporales",found.error);
+  for(const product of found.data){
+    const paths=product.product_images.map(image=>image.storage_path).filter(path=>path.startsWith(`${product.id}/`)&&!path.includes("?copy="));
+    if(paths.length){const removed=await supabase.storage.from("product-images").remove(paths);if(removed.error)fail(`No se pudieron borrar imágenes de ${product.code}`,removed.error)}
+    const purged=await supabase.rpc("purge_test_product",{target_product_id:product.id});if(purged.error)fail(`No se pudo limpiar ${product.code}`,purged.error);
+  }
 }
 
 async function makeTestImage(){
@@ -61,23 +70,26 @@ async function makeTestImage(){
 }
 
 export async function runControlledAdminTest(){
+  let stage="limpieza inicial";
+  await purgeControlledTestProducts();
+  stage="registro del catálogo inicial";
   const {data:before,error:beforeError}=await supabase.from("products").select("id,code").order("id");
   if(beforeError)fail("No se pudo registrar el catálogo inicial",beforeError);
   if(before.length!==15||before.some(p=>p.code.startsWith("PRUEBA-CODEX")))fail("El catálogo inicial no contiene exactamente los 15 productos esperados");
   const originalIds=before.map(p=>p.id).sort();let sourceId:string|undefined;let copyId:string|undefined;
   try{
+    stage="generación de imagen";
     const image=await makeTestImage();
     const base:ProductInput={name:"Producto temporal Codex",code:"PRUEBA-CODEX-001",brand:"NextLevel",category:"Accesorios",model:"TEST-001",normalPrice:100000,salePrice:null,stock:2,minimumStock:1,description:"Registro temporal para validación controlada.",warranty:"Sin garantía",isActive:false,isFeatured:false,isNew:false,isOnSale:false,previews:[{id:crypto.randomUUID(),url:URL.createObjectURL(image),name:image.name,main:true,file:image}]};
-    sourceId=await saveProduct(null,base);
+    stage="creación";sourceId=await saveProduct(null,base);
     const created=await supabase.from("products").select("id,code,stock").eq("id",sourceId).single();if(created.error||created.data.code!=="PRUEBA-CODEX-001")fail("Falló la verificación de creación",created.error);
     const imageRows=await supabase.from("product_images").select("id,storage_path,public_url").eq("product_id",sourceId);if(imageRows.error||imageRows.data.length!==1)fail("Falló la verificación de imagen",imageRows.error);
     const stored=imageRows.data[0];const sourceProduct:Product={id:0,dbId:sourceId,name:base.name,brand:base.brand,category:base.category,price:base.normalPrice,stock:base.stock,image:stored.public_url,description:base.description,specs:{},warranty:base.warranty,images:[{id:stored.id,storagePath:stored.storage_path,url:stored.public_url,isPrimary:true,sortOrder:0}]};
-    await saveProduct(sourceProduct,{...base,name:"Producto temporal Codex editado",stock:7,normalPrice:120000,salePrice:99000,isOnSale:true,previews:[{id:stored.id,url:stored.public_url,name:"prueba-codex.png",main:true,storagePath:stored.storage_path}]});
+    stage="edición, stock y descuento";await saveProduct(sourceProduct,{...base,name:"Producto temporal Codex editado",stock:7,normalPrice:120000,salePrice:99000,isOnSale:true,previews:[{id:stored.id,url:stored.public_url,name:"prueba-codex.png",main:true,storagePath:stored.storage_path}]});
     const edited=await supabase.from("products").select("name,stock,price,sale_price,is_on_sale").eq("id",sourceId).single();if(edited.error||edited.data.name!=="Producto temporal Codex editado"||edited.data.stock!==7||Number(edited.data.sale_price)!==99000)fail("Falló la verificación de edición, stock o descuento",edited.error);
-    const duplicate=await supabase.rpc("duplicate_product",{source_product_id:sourceId});if(duplicate.error)fail("Falló la duplicación",duplicate.error);copyId=duplicate.data;
+    stage="duplicación";const duplicate=await supabase.rpc("duplicate_product",{source_product_id:sourceId});if(duplicate.error)fail("Falló la duplicación",duplicate.error);copyId=duplicate.data;
     const copied=await supabase.from("products").select("id,code").eq("id",copyId).single();if(copied.error||!copied.data.code.startsWith("PRUEBA-CODEX-001-"))fail("Falló la verificación del duplicado",copied.error);
-    const deletion=await supabase.from("products").delete().in("id",[sourceId,copyId]);if(deletion.error)fail("Falló la eliminación",deletion.error);
-    const storageDelete=await supabase.storage.from("product-images").remove([stored.storage_path]);if(storageDelete.error)fail("Falló la limpieza del archivo",storageDelete.error);
+    stage="limpieza final";await purgeControlledTestProducts();
     const {data:after,error:afterError}=await supabase.from("products").select("id,code").order("id");if(afterError)fail("No se pudo verificar la limpieza",afterError);
     if(after.some(p=>p.code.startsWith("PRUEBA-CODEX"))||JSON.stringify(after.map(p=>p.id).sort())!==JSON.stringify(originalIds))fail("La limpieza final no coincide con el catálogo inicial");
     const listed=await supabase.storage.from("product-images").list(sourceId);if(listed.error||listed.data.length)fail("Quedaron imágenes de prueba",listed.error);
@@ -85,7 +97,7 @@ export async function runControlledAdminTest(){
     const saved=await supabase.from("store_settings").upsert({setting_key:"codex_admin_e2e_result",setting_value:report,is_public:false},{onConflict:"setting_key"});if(saved.error)fail("La prueba terminó, pero no se pudo guardar el comprobante",saved.error);
     return report;
   }catch(error){
-    if(sourceId||copyId)await supabase.from("products").delete().in("id",[sourceId,copyId].filter(Boolean));
-    throw error;
+    await purgeControlledTestProducts().catch(()=>undefined);
+    throw new Error(`Etapa "${stage}" falló: ${error instanceof Error?error.message:"error desconocido"}`);
   }
 }

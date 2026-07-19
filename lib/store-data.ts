@@ -42,7 +42,7 @@ export async function fetchStoreProducts(includeInactive = false): Promise<Produ
     .select(`
       id,name,code,slug,model,description,price,sale_price,stock,minimum_stock,
       is_active,is_featured,is_new,is_on_sale,sale_starts_at,sale_ends_at,
-      warranty,created_at,
+      warranty,created_at,deleted_at,
       category:categories(name,slug),
       brand:brands(name,slug),
       images:product_images(id,storage_path,public_url,is_primary,sort_order),
@@ -50,6 +50,7 @@ export async function fetchStoreProducts(includeInactive = false): Promise<Produ
     `)
     .order("created_at", { ascending: false });
 
+  query = query.is("deleted_at", null);
   if (!includeInactive) query = query.eq("is_active", true);
   const { data, error } = await query;
   if (error) throw error;
