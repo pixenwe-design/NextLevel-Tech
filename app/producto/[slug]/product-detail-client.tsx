@@ -33,16 +33,17 @@ export default function ProductDetail({slug}:{slug:string}){
      <nav className="productBreadcrumb" aria-label="Ruta de navegación">
       <Link href="/"><ArrowLeft/> Inicio</Link><ChevronRight/>
       <Link href="/">Productos</Link><ChevronRight/>
-      <span>{product.category}</span><ChevronRight/>
-      <b>{product.name}</b>
+     <span>{product.category}</span><ChevronRight/>
+     <b>{product.name}</b>
      </nav>
+     <Link className="headerBackLink" href="/"><ArrowLeft/> Volver al catálogo</Link>
     </div>
     <div className="productHeaderVisual" aria-hidden="true">
-     <div className="visualPanel visualPanelBack"><img src={product.image} alt=""/></div>
-     <div className="visualPanel visualPanelMain"><span className="visualCode">NL // PERFORMANCE</span><img src={product.image} alt=""/></div>
-     <div className="visualChip"><i/><span>SELECTED<br/><b>HARDWARE</b></span></div>
-     <div className="trustFloat"><span><Truck/></span><div><b>Envíos a todo Paraguay</b><small>Garantía oficial · Compra segura</small></div></div>
+     <div className="headerProductHalo"/>
+     <div className="headerProductFrame"><span>NL / SELECTED HARDWARE</span><img src={product.image} alt=""/></div>
+     <div className="headerTechTag"><i/><span>PERFORMANCE<br/><b>READY</b></span></div>
     </div>
+    <div className="productHeaderBenefits"><article><span><Truck/></span><div><b>Envíos a todo Paraguay</b><small>Rápidos y seguros</small></div></article><article><span><ShieldCheck/></span><div><b>Garantía oficial</b><small>Respaldo asegurado</small></div></article><article><span><CreditCard/></span><div><b>Compra segura</b><small>Pagos protegidos</small></div></article></div>
    </div>
   </section>
   <main className="detail section">
