@@ -304,3 +304,71 @@ body{font-size:15px;line-height:1.55}.iconBtn{display:inline-grid;place-items:ce
   pointer-events:none;
  }
 }
+
+/* Professional product search autocomplete */
+.search{position:relative;z-index:42}
+.searchPanel{
+ position:absolute;
+ z-index:60;
+ top:calc(100% + 10px);
+ right:0;
+ width:min(480px,calc(100vw - 24px));
+ overflow:hidden;
+ border:1px solid #313b50;
+ border-radius:15px;
+ background:#0d131ee8;
+ box-shadow:0 22px 70px #000c,0 0 0 1px #ffffff08 inset;
+ backdrop-filter:blur(20px);
+}
+.searchResults{max-height:520px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3d4860 transparent}
+.searchResult{
+ display:grid;
+ width:100%;
+ min-height:84px;
+ grid-template-columns:62px minmax(0,1fr) auto;
+ align-items:center;
+ gap:12px;
+ padding:10px 13px;
+ border:0;
+ border-bottom:1px solid #263043;
+ background:transparent;
+ color:#eef2ff;
+ text-align:left;
+ transition:background .16s,border-color .16s;
+}
+.searchResult:hover,.searchResult.active,.searchResult[aria-selected="true"]{background:linear-gradient(90deg,#7047f51c,#426df40d);border-color:#4a416b}
+.searchResult img{width:62px;height:62px;object-fit:cover;border:1px solid #303b50;border-radius:9px;background:#151b26}
+.searchResultInfo{display:flex;min-width:0;flex-direction:column;gap:4px}
+.searchResultInfo>b{overflow:hidden;color:#f5f7ff;font:700 13px/1.25 Space Grotesk;text-overflow:ellipsis;white-space:nowrap}
+.searchResultInfo small{overflow:hidden;color:#8f9bb0;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.searchResultInfo small i{margin:0 4px;color:#6559a0;font-style:normal}
+.searchResultInfo>em{font-size:8px;font-style:normal;font-weight:750}
+.searchResultInfo>em.available{color:#58e7a0}.searchResultInfo>em.unavailable{color:#ff697b}
+.searchResultPrice{display:flex;min-width:96px;align-items:flex-end;flex-direction:column;gap:3px;text-align:right}
+.searchResultPrice>b{font:700 12px Space Grotesk;white-space:nowrap}
+.searchResultPrice>small{color:#68758c;font-size:8px;text-decoration:line-through}
+.searchResultPrice>em{padding:3px 5px;border-radius:4px;background:#e63f60;color:#fff;font-size:7px;font-style:normal;font-weight:850;letter-spacing:.5px}
+.searchAll{
+ display:flex;
+ width:100%;
+ min-height:48px;
+ align-items:center;
+ justify-content:center;
+ gap:9px;
+ border:0;
+ background:#111927;
+ color:#baaaff;
+ font-size:10px;
+ font-weight:800;
+}
+.searchAll:hover{background:#181e30;color:#fff}.searchAll svg{width:15px}
+.searchStatus{min-height:112px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;padding:20px;color:#8e9aaf;font-size:10px;text-align:center}
+.searchStatus>svg{width:21px;color:#8067ee}.searchStatus>b{color:#fff;font-size:12px}.searchStatus>span{color:#758197}
+@media(max-width:600px){
+ .searchPanel{right:-55px;width:calc(100vw - 26px);border-radius:13px}
+ .searchResults{max-height:min(440px,58vh)}
+ .searchResult{min-height:76px;grid-template-columns:54px minmax(0,1fr) auto;gap:9px;padding:9px 10px}
+ .searchResult img{width:54px;height:54px}
+ .searchResultInfo>b{font-size:11px}
+ .searchResultPrice{min-width:82px}.searchResultPrice>b{font-size:10px}
+}

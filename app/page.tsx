@@ -43,6 +43,11 @@ export const demoProducts: Product[] = [
 
 const categories = ["Todos","PC gamer","Computadoras de oficina","Notebooks","Monitores","Procesadores","Placas de video","Memorias RAM","Almacenamiento","Fuentes","Gabinetes","Motherboards","Teclados","Mouse","Auriculares","Sillas gamer","Consolas","PlayStation","Xbox","Nintendo","Videojuegos","Accesorios"];
 export const gs = (n:number) => `Gs. ${Math.round(n).toLocaleString("es-PY")}`;
+const normalizeSearch=(value:string)=>value.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+const searchableProductText=(product:Product)=>normalizeSearch([
+  product.name,product.brand,product.category,product.model,product.code,product.description,
+  ...Object.keys(product.specs||{}),...Object.values(product.specs||{})
+].filter(Boolean).join(" "));
 
 export default function Home() {
   const [view,setView]=useState<"shop"|"detail"|"admin">("shop");
@@ -56,21 +61,31 @@ export default function Home() {
   const [checkout,setCheckout]=useState(false);
   const [storeProducts,setStoreProducts]=useState<Product[]>(demoProducts);
   const [mainCategories,setMainCategories]=useState<MainCategory[]>([]);
+  const [debouncedQuery,setDebouncedQuery]=useState("");
+  const [searchOpen,setSearchOpen]=useState(false);
+  const [searchActive,setSearchActive]=useState(-1);
+  const searchRoot=useRef<HTMLDivElement>(null);
   const products=storeProducts;
   useEffect(()=>{let active=true;const reload=()=>fetchStoreProducts().then(data=>{if(active)setStoreProducts(data.length?data:demoProducts)}).catch(error=>console.error("Supabase products:",error));reload();const unsubscribe=subscribeToCatalog(reload);return()=>{active=false;unsubscribe()}},[]);
   useEffect(()=>{let active=true;fetchMainCategories().then(data=>{if(active)setMainCategories(data)}).catch(error=>console.error("Supabase categories:",error));return()=>{active=false}},[]);
   useEffect(()=>{const timer=setTimeout(()=>{try{setCart(JSON.parse(localStorage.getItem("nlt-cart")||"{}"))}catch{}},0);return()=>clearTimeout(timer)},[]);
   useEffect(()=>{localStorage.setItem("nlt-cart",JSON.stringify(cart))},[cart]);
+  useEffect(()=>{const timer=setTimeout(()=>setDebouncedQuery(query),250);return()=>clearTimeout(timer)},[query]);
+  useEffect(()=>{const close=(event:PointerEvent)=>{if(!searchRoot.current?.contains(event.target as Node)){setSearchOpen(false);setSearchActive(-1)}};const escape=(event:KeyboardEvent)=>{if(event.key==="Escape"){setSearchOpen(false);setSearchActive(-1)}};document.addEventListener("pointerdown",close);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",close);document.removeEventListener("keydown",escape)}},[]);
   const filtered=useMemo(()=>storeProducts.filter(p=>{
-    const hay=`${p.name} ${p.brand} ${p.category} ${p.description}`.toLowerCase();
-    return (!query||hay.includes(query.toLowerCase()))&&categoryMatchesSelection(p.category,category,mainCategories)&&(brand==="Todas"||p.brand===brand)&&(!saleOnly||!!p.oldPrice)&&(!stockOnly||p.stock>0)&&(!min||p.price>=+min)&&(!max||p.price<=+max)
+    const terms=normalizeSearch(query).split(/\s+/).filter(Boolean);const hay=searchableProductText(p);
+    return (!terms.length||terms.every(term=>hay.includes(term)))&&categoryMatchesSelection(p.category,category,mainCategories)&&(brand==="Todas"||p.brand===brand)&&(!saleOnly||!!p.oldPrice)&&(!stockOnly||p.stock>0)&&(!min||p.price>=+min)&&(!max||p.price<=+max)
   }).sort((a,b)=>sort==="low"?a.price-b.price:sort==="high"?b.price-a.price:sort==="az"?a.name.localeCompare(b.name):(b.createdAt||"").localeCompare(a.createdAt||"")),[storeProducts,query,category,brand,saleOnly,stockOnly,min,max,sort,mainCategories]);
   const availableBrands=useMemo(()=>[...new Set(storeProducts.filter(product=>categoryMatchesSelection(product.category,category,mainCategories)).map(product=>product.brand))],[storeProducts,category,mainCategories]);
+  const autocompleteMatches=useMemo(()=>{const terms=normalizeSearch(debouncedQuery).split(/\s+/).filter(Boolean);if(!terms.length)return[];return storeProducts.filter(product=>{const haystack=searchableProductText(product);return terms.every(term=>haystack.includes(term))})},[storeProducts,debouncedQuery]);
+  const autocompleteResults=autocompleteMatches.slice(0,8);
   const brandLabel=(name:string)=>category==="Consolas"?(name==="Sony"?"PlayStation":name==="Microsoft"?"Xbox":name):name;
   const activeFilterCount=[category!=="Todos",brand!=="Todas",!!min,!!max,saleOnly,stockOnly].filter(Boolean).length;
   const cartItems=storeProducts.filter(p=>cart[p.id]).map(p=>({...p,qty:cart[p.id]})); const total=cartItems.reduce((s,p)=>s+p.price*p.qty,0); const count=Object.values(cart).reduce((a,b)=>a+b,0);
   const add=(p:Product)=>{setCart(c=>({...c,[p.id]:Math.min((c[p.id]||0)+1,p.stock)}));setCartOpen(true);setToast(`${p.name} agregado`);setTimeout(()=>setToast(""),1800)};
   const openDetail=(p:Product)=>{const slug=p.slug||p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");location.href=`/producto/${slug}`};
+  const showAllSearchResults=()=>{setSearchOpen(false);setSearchActive(-1);setView("shop");setCategory("Todos");setBrand("Todas");setSaleOnly(false);setStockOnly(false);setMin("");setMax("");setTimeout(()=>document.getElementById("catalogo")?.scrollIntoView({behavior:"smooth",block:"start"}),20)};
+  const searchKeyDown=(event:React.KeyboardEvent<HTMLInputElement>)=>{if(event.key==="Escape"){event.preventDefault();setSearchOpen(false);setSearchActive(-1);return}if(event.key==="ArrowDown"||event.key==="ArrowUp"){event.preventDefault();if(!searchOpen)setSearchOpen(true);if(!autocompleteResults.length)return;const direction=event.key==="ArrowDown"?1:-1;setSearchActive(current=>current<0?(direction>0?0:autocompleteResults.length-1):(current+direction+autocompleteResults.length)%autocompleteResults.length);return}if(event.key==="Enter"){event.preventDefault();if(searchActive>=0&&autocompleteResults[searchActive])openDetail(autocompleteResults[searchActive]);else showAllSearchResults()}};
   const wa=(p?:Product,customer?:Record<string,string>)=>{const lines=p?[`Hola NextLevel Tech, quiero comprar:`,`• ${p.name} — ${gs(p.price)}`]:["Hola NextLevel Tech, quiero realizar este pedido:",...cartItems.map(x=>`• ${x.name}\n  ${x.qty} × ${gs(x.price)} = ${gs(x.qty*x.price)}`),``,`TOTAL: ${gs(total)}`,``,`Nombre: ${customer?.nombre||""}`,`Teléfono: ${customer?.telefono||""}`,`Ciudad: ${customer?.ciudad||""}`,`Dirección: ${customer?.direccion||""}`,`Referencia: ${customer?.referencia||""}`,`Forma de pago: ${customer?.pago||""}`,`Retiro o delivery: ${customer?.entrega||""}`];window.open(`https://wa.me/595985993848?text=${encodeURIComponent(lines.join("\n"))}`,"_blank")};
   const advisor=()=>{const message=["Hola NextLevel Tech.","","Estoy interesado en recibir asesoramiento para elegir un producto.","","Me gustaría recibir información sobre:","","Computadoras","Notebooks","Componentes","Consolas","Otro:","","Muchas gracias."].join("\n");window.open(`https://wa.me/595985993848?text=${encodeURIComponent(message)}`,"_blank")};
   const verifyAdmin=async(userId:string)=>{const {data,error}=await supabase.from("profiles").select("role").eq("id",userId).single();if(error||data?.role!=="admin"){await supabase.auth.signOut();setAdmin(false);return false}setAdmin(true);return true};
@@ -86,7 +101,11 @@ export default function Home() {
     <header><div className="nav">
       <button className="hamb iconBtn" onClick={()=>setMenu(!menu)} aria-label="Abrir menú"><Menu/></button><button className="logo" onClick={()=>setView("shop")}><b>NL</b><span>NextLevel<small>TECH</small></span></button>
       <nav className={menu?"show":""}><button onClick={()=>{setView("shop");setCategory("Todos")}}>Inicio</button><button onClick={()=>{setView("shop");setCategory("Todos");setTimeout(()=>document.getElementById("catalogo")?.scrollIntoView(),20)}}>Productos</button><button onClick={()=>{setView("shop");setSaleOnly(true)}}>Ofertas</button><button onClick={()=>setView("admin")}>Administrar</button></nav>
-      <label className="search"><Search/><input aria-label="Buscar productos" value={query} onChange={e=>{setQuery(e.target.value);setView("shop")}} placeholder="Buscar producto, marca o categoría..."/></label>
+      <div className="search" ref={searchRoot}><Search/><input role="combobox" aria-label="Buscar productos" aria-autocomplete="list" aria-expanded={searchOpen&&!!query.trim()} aria-controls="product-search-results" aria-activedescendant={searchActive>=0?`search-result-${searchActive}`:undefined} value={query} onFocus={()=>{if(query.trim())setSearchOpen(true)}} onKeyDown={searchKeyDown} onChange={e=>{setQuery(e.target.value);setView("shop");setSearchOpen(!!e.target.value.trim());setSearchActive(-1)}} placeholder="Buscar producto, marca o categoría..."/>
+       {searchOpen&&!!query.trim()&&<div className="searchPanel" id="product-search-results" role="listbox">
+        {query.trim()!==debouncedQuery.trim()?<div className="searchStatus">Buscando productos…</div>:autocompleteResults.length?<><div className="searchResults">{autocompleteResults.map((product,index)=><button type="button" id={`search-result-${index}`} role="option" aria-selected={searchActive===index} className={`searchResult ${searchActive===index?"active":""}`} key={product.dbId||product.id} onMouseEnter={()=>setSearchActive(index)} onClick={()=>openDetail(product)}><img src={product.image} alt=""/><span className="searchResultInfo"><b>{product.name}</b><small>{product.brand} <i>•</i> {product.category}</small><em className={product.stock>0?"available":"unavailable"}>{product.stock>0?`${product.stock} disponibles`:"Agotado"}</em></span><span className="searchResultPrice"><b>{gs(product.price)}</b>{product.oldPrice&&<><small>{gs(product.oldPrice)}</small><em>OFERTA</em></>}</span></button>)}</div><button type="button" className="searchAll" onClick={showAllSearchResults}>Ver todos los resultados ({autocompleteMatches.length}) <ArrowRight/></button></>:<div className="searchStatus"><Search/><b>Sin coincidencias</b><span>Probá con otro nombre, marca o categoría.</span></div>}
+       </div>}
+      </div>
       <button className="cartBtn" onClick={()=>setCartOpen(true)} aria-label="Abrir carrito"><ShoppingCart/><em>{count}</em></button>
     </div></header>
 
