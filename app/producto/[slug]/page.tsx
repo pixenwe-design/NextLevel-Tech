@@ -1,4 +1,4 @@
-import ProductDetail from "./product-detail";
+import ProductDetail from "@/app/producto/[slug]/product-detail-client";
 
 export default async function ProductPage({params}:{params:Promise<{slug:string}>}){
   const {slug}=await params;
