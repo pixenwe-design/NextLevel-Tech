@@ -79,8 +79,8 @@ export default function Home() {
   return <div>
     <div className="topline" aria-label="Beneficios de compra">
       <div className="toplineTrack">
-        <div className="toplineGroup"><span>Envíos a todo Paraguay</span><i/> <span>Pagá con tarjetas</span><i/> <span>Garantía en productos seleccionados</span><i/></div>
-        <div className="toplineGroup" aria-hidden="true"><span>Envíos a todo Paraguay</span><i/> <span>Pagá con tarjetas</span><i/> <span>Garantía en productos seleccionados</span><i/></div>
+        <div className="toplineGroup"><span className="toplineItem">Envíos a todo Paraguay<i/></span><span className="toplineItem">Pagá con tarjetas<i/></span><span className="toplineItem">Garantía en productos seleccionados<i/></span></div>
+        <div className="toplineGroup" aria-hidden="true"><span className="toplineItem">Envíos a todo Paraguay<i/></span><span className="toplineItem">Pagá con tarjetas<i/></span><span className="toplineItem">Garantía en productos seleccionados<i/></span></div>
       </div>
     </div>
     <header><div className="nav">
