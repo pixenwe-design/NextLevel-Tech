@@ -91,11 +91,22 @@ export async function fetchStoreProducts(includeInactive = false): Promise<Produ
   });
 }
 
+export type MainCategory={id:string;name:string;slug:string;children:string[]};
+export async function fetchMainCategories():Promise<MainCategory[]>{
+  const {data,error}=await supabase.from("categories")
+    .select("id,name,slug,sort_order,children:categories!parent_id(name)")
+    .eq("is_main_navigation",true).eq("is_active",true)
+    .order("sort_order",{ascending:true});
+  if(error)throw error;
+  return (data||[]).map(category=>({...category,children:(category.children||[]).map(child=>child.name)}));
+}
+
 export function subscribeToCatalog(onChange:()=>void){
   const channel=supabase.channel(`catalog-${crypto.randomUUID()}`)
     .on("postgres_changes",{event:"*",schema:"public",table:"products"},onChange)
     .on("postgres_changes",{event:"*",schema:"public",table:"product_images"},onChange)
     .on("postgres_changes",{event:"*",schema:"public",table:"product_specs"},onChange)
+    .on("postgres_changes",{event:"*",schema:"public",table:"categories"},onChange)
     .subscribe();
   return ()=>{void supabase.removeChannel(channel)};
 }
