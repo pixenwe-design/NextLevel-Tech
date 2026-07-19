@@ -77,7 +77,12 @@ export default function Home() {
   const handleAdminLogin=async(e:React.FormEvent)=>{e.preventDefault();setLoginBusy(true);setLoginError("");const {data,error}=await supabase.auth.signInWithPassword(login);if(error||!data.user){setLoginError("Correo o contraseña incorrectos.");setLoginBusy(false);return}if(!await verifyAdmin(data.user.id))setLoginError("Este usuario no tiene permisos de administrador.");setLoginBusy(false)};
   useEffect(()=>{supabase.auth.getUser().then(({data})=>{if(data.user)verifyAdmin(data.user.id)});const {data}=supabase.auth.onAuthStateChange((_event,session)=>{if(!session)setAdmin(false)});return()=>data.subscription.unsubscribe()},[]);
   return <div>
-    <div className="topline">Envíos a todo Paraguay <span>•</span> Pagá con tarjetas, transferencia o efectivo</div>
+    <div className="topline" aria-label="Beneficios de compra">
+      <div className="toplineTrack">
+        <div className="toplineGroup"><span>Envíos a todo Paraguay</span><i/> <span>Pagá con tarjetas</span><i/> <span>Garantía en productos seleccionados</span><i/></div>
+        <div className="toplineGroup" aria-hidden="true"><span>Envíos a todo Paraguay</span><i/> <span>Pagá con tarjetas</span><i/> <span>Garantía en productos seleccionados</span><i/></div>
+      </div>
+    </div>
     <header><div className="nav">
       <button className="hamb iconBtn" onClick={()=>setMenu(!menu)} aria-label="Abrir menú"><Menu/></button><button className="logo" onClick={()=>setView("shop")}><b>NL</b><span>NextLevel<small>TECH</small></span></button>
       <nav className={menu?"show":""}><button onClick={()=>{setView("shop");setCategory("Todos")}}>Inicio</button><button onClick={()=>{setView("shop");setCategory("Todos");setTimeout(()=>document.getElementById("catalogo")?.scrollIntoView(),20)}}>Productos</button><button onClick={()=>{setView("shop");setSaleOnly(true)}}>Ofertas</button><button onClick={()=>setView("admin")}>Administrar</button></nav>
