@@ -92,6 +92,25 @@ export async function fetchStoreProducts(includeInactive = false): Promise<Produ
 }
 
 export type MainCategory={id:string;name:string;slug:string;children:string[]};
+const fallbackCategoryChildren:Record<string,string[]>={
+  Consolas:["PlayStation","Xbox","Nintendo"],
+  Periféricos:["Teclados","Mouse","Auriculares","Accesorios","Sillas gamer"],
+};
+
+export function categoryMatchesSelection(productCategory:string,selection:string,mainCategories:MainCategory[]=[]){
+  if(selection==="Todos")return true;
+  const main=mainCategories.find(category=>category.name===selection);
+  const children=main?.children||fallbackCategoryChildren[selection]||[];
+  return productCategory===selection||children.includes(productCategory);
+}
+
+export function mainCategoryName(productCategory:string,mainCategories:MainCategory[]=[]){
+  const main=mainCategories.find(category=>category.name===productCategory||category.children.includes(productCategory));
+  if(main)return main.name;
+  const fallback=Object.entries(fallbackCategoryChildren).find(([,children])=>children.includes(productCategory));
+  return fallback?.[0]||productCategory;
+}
+
 export async function fetchMainCategories():Promise<MainCategory[]>{
   const {data,error}=await supabase.from("categories")
     .select("id,name,slug,sort_order,children:categories!parent_id(name)")

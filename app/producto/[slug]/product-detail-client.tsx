@@ -5,17 +5,19 @@ import Link from "next/link";
 import {ArrowLeft,ArrowRight,ChevronRight,CreditCard,Home,PackageCheck,ShieldCheck,ShoppingCart,Truck} from "lucide-react";
 import {FaWhatsapp} from "react-icons/fa6";
 import {demoProducts,gs,type Product} from "../../page";
-import {fetchStoreProducts,subscribeToCatalog} from "../../../lib/store-data";
+import {fetchMainCategories,fetchStoreProducts,mainCategoryName,subscribeToCatalog,type MainCategory} from "../../../lib/store-data";
 
 const identity=(product:Product)=>product.dbId||String(product.id);
 const productSlug=(product:Product)=>product.slug||product.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 
 export default function ProductDetail({slug}:{slug:string}){
  const [products,setProducts]=useState<Product[]>([]);
+ const [mainCategories,setMainCategories]=useState<MainCategory[]>([]);
  const [loading,setLoading]=useState(true);
  useEffect(()=>{let active=true;const reload=()=>fetchStoreProducts().then(data=>{if(active){setProducts(data.length?data:demoProducts);setLoading(false)}}).catch(()=>{if(active){setProducts(demoProducts);setLoading(false)}});reload();const unsubscribe=subscribeToCatalog(reload);return()=>{active=false;unsubscribe()}},[]);
+ useEffect(()=>{let active=true;fetchMainCategories().then(data=>{if(active)setMainCategories(data)}).catch(error=>console.error("Supabase categories:",error));return()=>{active=false}},[]);
  const product=products.find(item=>productSlug(item)===slug);
- const related=useMemo(()=>{if(!product)return[];const candidates=[...products.filter(item=>item.category===product.category),...products.filter(item=>item.category!==product.category)];const seen=new Set<string>([identity(product)]);return candidates.filter(item=>{const id=identity(item);if(seen.has(id))return false;seen.add(id);return item.isActive!==false}).slice(0,4)},[product,products]);
+ const related=useMemo(()=>{if(!product)return[];const category=mainCategoryName(product.category,mainCategories);const candidates=[...products.filter(item=>mainCategoryName(item.category,mainCategories)===category),...products.filter(item=>mainCategoryName(item.category,mainCategories)!==category)];const seen=new Set<string>([identity(product)]);return candidates.filter(item=>{const id=identity(item);if(seen.has(id))return false;seen.add(id);return item.isActive!==false}).slice(0,4)},[product,products,mainCategories]);
  if(loading)return <main className="detail section"><div className="empty"><b>Cargando producto…</b></div></main>;
  if(!product)return <main className="detail section"><div className="empty"><b>Producto no encontrado</b><p>El producto solicitado no existe o ya no está disponible.</p><Link className="primary" href="/">Volver a la tienda</Link></div></main>;
  const whatsapp=()=>window.open(`https://wa.me/595985993848?text=${encodeURIComponent(`Hola NextLevel Tech, quiero comprar:\n• ${product.name} — ${gs(product.price)}`)}`,"_blank");
