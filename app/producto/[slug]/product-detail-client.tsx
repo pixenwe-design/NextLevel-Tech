@@ -2,7 +2,7 @@
 
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
-import {ArrowLeft,ArrowRight,ChevronRight,CreditCard,PackageCheck,ShieldCheck,ShoppingCart,Truck} from "lucide-react";
+import {ArrowLeft,ArrowRight,ChevronRight,CreditCard,Home,PackageCheck,ShieldCheck,ShoppingCart,Truck} from "lucide-react";
 import {FaWhatsapp} from "react-icons/fa6";
 import {demoProducts,gs,type Product} from "../../page";
 import {fetchStoreProducts,subscribeToCatalog} from "../../../lib/store-data";
@@ -21,6 +21,7 @@ export default function ProductDetail({slug}:{slug:string}){
  const whatsapp=()=>window.open(`https://wa.me/595985993848?text=${encodeURIComponent(`Hola NextLevel Tech, quiero comprar:\n• ${product.name} — ${gs(product.price)}`)}`,"_blank");
 
  return <>
+  <div className="productHeaderSection">
   <section className="productHero productHeader">
    <div className="productHeroGrid"/>
    <div className="productHeaderBeam"/>
@@ -28,24 +29,27 @@ export default function ProductDetail({slug}:{slug:string}){
    <div className="productHeroInner">
     <div className="productHeaderCopy">
      <span className="productHeroLabel">NEXTLEVEL TECH</span>
-     <h2>Tecnología que impulsa tu rendimiento</h2>
+     <h2>Tecnología que impulsa<br/>tu <span>rendimiento</span></h2>
      <p>Componentes, equipos y accesorios seleccionados para crear un setup más potente.</p>
      <nav className="productBreadcrumb" aria-label="Ruta de navegación">
-      <Link href="/"><ArrowLeft/> Inicio</Link><ChevronRight/>
-      <Link href="/">Productos</Link><ChevronRight/>
-     <span>{product.category}</span><ChevronRight/>
-     <b>{product.name}</b>
+      <Link className="breadcrumbPill" href="/"><Home/> Inicio</Link><ChevronRight className="breadcrumbSeparator"/>
+      <Link className="breadcrumbPill" href="/">Productos</Link><ChevronRight className="breadcrumbSeparator"/>
+      <span className="breadcrumbPill">{product.category}</span><ChevronRight className="breadcrumbSeparator"/>
+      <b className="breadcrumbCurrent">{product.name}</b>
      </nav>
      <Link className="headerBackLink" href="/"><ArrowLeft/> Volver al catálogo</Link>
     </div>
-    <div className="productHeaderVisual" aria-hidden="true">
-     <div className="headerProductHalo"/>
-     <div className="headerProductFrame"><span>NL / SELECTED HARDWARE</span><img src={product.image} alt=""/></div>
-     <div className="headerTechTag"><i/><span>PERFORMANCE<br/><b>READY</b></span></div>
+    <div className="productHeaderRight">
+     <div className="productHeaderVisual" aria-hidden="true">
+      <div className="headerProductHalo"/>
+      <div className="headerProductFrame"><span>NL / SELECTED HARDWARE</span><img src={product.image} alt=""/></div>
+      <div className="headerTechTag"><i/><span>PERFORMANCE<br/><b>READY</b></span></div>
+     </div>
+     <div className="productHeaderBenefits"><article><span><Truck/></span><div><b>Envíos a todo Paraguay</b><small>Rápidos y seguros</small></div></article><article><span><ShieldCheck/></span><div><b>Garantía oficial</b><small>Respaldo asegurado</small></div></article><article><span><CreditCard/></span><div><b>Compra segura</b><small>Pagos protegidos</small></div></article></div>
     </div>
-    <div className="productHeaderBenefits"><article><span><Truck/></span><div><b>Envíos a todo Paraguay</b><small>Rápidos y seguros</small></div></article><article><span><ShieldCheck/></span><div><b>Garantía oficial</b><small>Respaldo asegurado</small></div></article><article><span><CreditCard/></span><div><b>Compra segura</b><small>Pagos protegidos</small></div></article></div>
    </div>
   </section>
+  </div>
   <main className="detail section">
    <div className="detailGrid">
     <div className="gallery"><img src={product.image} alt={product.name}/><div>{(product.gallery?.length?product.gallery:[product.image]).map((image,index)=><button key={`${image}-${index}`}><img src={image} alt={`Vista ${index+1} de ${product.name}`}/></button>)}</div></div>
