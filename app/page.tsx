@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, ArrowRight, BadgeCheck, Box, Check, ChevronDown, ChevronLeft,
   ChevronRight, CircleDollarSign, Copy, CreditCard, Edit3, Gauge,
@@ -120,6 +120,18 @@ function Admin({onExit}:{onExit:()=>void}){
   return <div className="adminShell"><aside><div className="logo"><b>NL</b><span>NextLevel<small>ADMIN</small></span></div>{adminNav.map(([name,Icon])=><button className={tab===name?"active":""} onClick={()=>setTab(name)} key={name}><Icon/>{name}</button>)}<button onClick={onExit}><ArrowLeft/> Cerrar sesión</button></aside><section><div className="adminTop"><div><span>ADMINISTRACIÓN</span><h1>{tab}</h1><p>Gestioná el catálogo y el inventario de la tienda.</p></div><button className="primary newProduct" onClick={openNew}><Plus/> Nuevo producto</button></div>{tab==="Dashboard"?<><div className="metrics">{metrics.map(([label,value,Icon])=><div key={label}><span className="metricIcon"><Icon/></span><div><span>{label}</span><b>{value}</b><small>Actualizado ahora</small></div></div>)}</div><div className="adminPanel critical"><div className="panelHeading"><div><h2>Stock crítico</h2><p>Productos que requieren reposición próximamente.</p></div><button className="secondary" onClick={()=>setTab("Inventario")}>Ver inventario <ArrowRight/></button></div><table><thead><tr><th>Producto</th><th>Stock actual</th><th>Estado</th><th>Precio</th><th></th></tr></thead><tbody>{adminProducts.filter(p=>p.stock<=(p.minimumStock??3)).map(p=><tr key={p.id}><td><div className="tableProd"><img src={p.image} alt=""/><b>{p.name}<small>{p.category}</small></b></div></td><td><b>{p.stock}</b> unidades</td><td><span className="low"><Gauge/> Stock bajo</span></td><td>{gs(p.price)}</td><td><button className="tableIcon" onClick={()=>edit(p)}><Edit3/></button></td></tr>)}</tbody></table></div></>:<ProductTable items={adminProducts} tab={tab} edit={edit} duplicate={duplicate} remove={remove}/>}</section>{showForm&&<ProductForm product={editing} onClose={()=>setShowForm(false)} onSaved={async()=>{setShowForm(false);await reload();window.dispatchEvent(new Event("products-changed"))}}/>}</div>
 }
 
+function AdminCategorySelect({categories,value,onChange}:{categories:MainCategory[],value:string,onChange:(value:string)=>void}){
+ const [open,setOpen]=useState(false);const root=useRef<HTMLDivElement>(null);
+ const options=[{id:"all",name:"Todas las categorías"},...categories];const selectedIndex=Math.max(0,options.findIndex(option=>option.id===value));const selected=options[selectedIndex];
+ useEffect(()=>{const close=(event:PointerEvent)=>{if(!root.current?.contains(event.target as Node))setOpen(false)};document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close)},[]);
+ const choose=(id:string)=>{onChange(id);setOpen(false)};
+ const keyDown=(event:React.KeyboardEvent)=>{if(event.key==="Escape"){setOpen(false);return}if(event.key==="Enter"||event.key===" "){event.preventDefault();setOpen(current=>!current);return}if(event.key==="ArrowDown"||event.key==="ArrowUp"){event.preventDefault();const direction=event.key==="ArrowDown"?1:-1;choose(options[(selectedIndex+direction+options.length)%options.length].id)}};
+ return <div className={`adminCategorySelect ${open?"open":""}`} ref={root}>
+  <button type="button" className="adminSelectTrigger" aria-haspopup="listbox" aria-expanded={open} onClick={()=>setOpen(current=>!current)} onKeyDown={keyDown}><Grid2X2/><span>{selected.name}</span><ChevronDown className="adminSelectArrow"/></button>
+  {open&&<div className="adminSelectMenu" role="listbox" aria-label="Filtrar por categoría principal">{options.map(option=><button type="button" role="option" aria-selected={option.id===value} className={option.id===value?"selected":""} key={option.id} onClick={()=>choose(option.id)}><span>{option.name}</span>{option.id===value&&<Check/>}</button>)}</div>}
+ </div>
+}
+
 function ProductTable({items,tab,edit,duplicate,remove}:{items:Product[],tab:string,edit:(p:Product)=>void,duplicate:(p:Product)=>void,remove:(p:Product)=>void}){
  const [query,setQuery]=useState("");const [mainCategory,setMainCategory]=useState("all");const [mainCategories,setMainCategories]=useState<MainCategory[]>([]);const [filterOpen,setFilterOpen]=useState(false);const [status,setStatus]=useState("all");const [page,setPage]=useState(1);const size=10;
  useEffect(()=>{let active=true;const reloadCategories=()=>fetchMainCategories().then(data=>{if(active)setMainCategories(data)}).catch(error=>console.error("Admin categories:",error));reloadCategories();const unsubscribe=subscribeToCatalog(reloadCategories);return()=>{active=false;unsubscribe()}},[]);
@@ -128,7 +140,7 @@ function ProductTable({items,tab,edit,duplicate,remove}:{items:Product[],tab:str
  const pages=Math.max(1,Math.ceil(filtered.length/size));const current=Math.min(page,pages);const shown=filtered.slice((current-1)*size,current*size);
  return <div className="adminPanel productTable">
   <div className="panelTools">
-   {tab==="Catálogo"?<label className="adminCategorySelect"><Grid2X2/><select value={mainCategory} onChange={e=>{setMainCategory(e.target.value);setPage(1)}} aria-label="Filtrar por categoría principal"><option value="all">Todas las categorías</option>{mainCategories.map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select><ChevronDown/></label>:<label><Search/><input value={query} onChange={e=>{setQuery(e.target.value);setPage(1)}} placeholder={`Buscar en ${tab.toLowerCase()}...`}/></label>}
+   {tab==="Catálogo"?<AdminCategorySelect categories={mainCategories} value={mainCategory} onChange={value=>{setMainCategory(value);setPage(1)}}/>:<label><Search/><input value={query} onChange={e=>{setQuery(e.target.value);setPage(1)}} placeholder={`Buscar en ${tab.toLowerCase()}...`}/></label>}
    <button className="secondary" onClick={()=>setFilterOpen(x=>!x)}><SlidersHorizontal/> Filtros</button>
    {filterOpen&&<select value={status} onChange={e=>{setStatus(e.target.value);setPage(1)}} aria-label="Filtrar productos"><option value="all">Todos</option><option value="active">Activos</option><option value="inactive">Inactivos</option><option value="stock">Con stock</option><option value="out">Agotados</option><option value="sale">En oferta</option></select>}
   </div>
