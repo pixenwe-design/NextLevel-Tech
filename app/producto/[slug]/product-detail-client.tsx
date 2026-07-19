@@ -28,6 +28,7 @@ export default function ProductDetail({slug}:{slug:string}){
    <div className="productHeaderCircuits"><i/><i/><i/><i/></div>
    <div className="productHeroInner">
     <div className="productHeaderCopy">
+     <Link className="headerBackLink" href="/"><ArrowLeft/> Volver al catálogo</Link>
      <span className="productHeroLabel">NEXTLEVEL TECH</span>
      <h2>Tecnología que impulsa<br/>tu <span>rendimiento</span></h2>
      <p>Componentes, equipos y accesorios seleccionados para crear un setup más potente.</p>
@@ -37,7 +38,6 @@ export default function ProductDetail({slug}:{slug:string}){
       <span className="breadcrumbPill">{product.category}</span><ChevronRight className="breadcrumbSeparator"/>
       <b className="breadcrumbCurrent">{product.name}</b>
      </nav>
-     <Link className="headerBackLink" href="/"><ArrowLeft/> Volver al catálogo</Link>
     </div>
     <div className="productHeaderRight">
      <div className="productHeaderVisual" aria-hidden="true">
