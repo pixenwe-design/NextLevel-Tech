@@ -5,7 +5,7 @@ import {
   ArrowLeft, ArrowRight, BadgeCheck, Box, Check, ChevronDown, ChevronLeft,
   ChevronRight, CircleDollarSign, Copy, CreditCard, Edit3, Gauge,
   Grid2X2, Headphones, ImagePlus, LayoutDashboard,
-  Menu, Package, PackageCheck, Plus, Search, ShieldCheck,
+  Package, PackageCheck, Plus, Search, ShieldCheck,
   ShoppingCart, SlidersHorizontal, Tag, Trash2, Truck, UploadCloud,
   Warehouse, X
 } from "lucide-react";
@@ -14,7 +14,6 @@ import { categoryMatchesSelection, fetchMainCategories, fetchStoreBrands, fetchS
 import { deleteProduct, saveProduct, type ProductInput } from "../lib/store-admin";
 import { supabase } from "../lib/supabase";
 import {useCart} from "./cart-context";
-import {CartButton} from "./cart-ui";
 
 export type Product = {
   id: number; name: string; brand: string; category: string; price: number; oldPrice?: number;
@@ -58,61 +57,34 @@ export default function Home() {
   const [detail,setDetail]=useState<Product|null>(null);
   const [query,setQuery]=useState(""); const [category,setCategory]=useState("Todos"); const [brand,setBrand]=useState("Todas");
   const [saleOnly,setSaleOnly]=useState(false); const [stockOnly,setStockOnly]=useState(false); const [sort,setSort]=useState("recent");
-  const [min,setMin]=useState(""); const [max,setMax]=useState(""); const [menu,setMenu]=useState(false);
+  const [min,setMin]=useState(""); const [max,setMax]=useState("");
   const [mobileFiltersOpen,setMobileFiltersOpen]=useState(false);
   const [admin,setAdmin]=useState(false); const [login,setLogin]=useState({email:"",password:""}); const [loginError,setLoginError]=useState(""); const [loginBusy,setLoginBusy]=useState(false); const [toast,setToast]=useState("");
   const [adminExitBusy,setAdminExitBusy]=useState(false); const [adminExitError,setAdminExitError]=useState(""); const adminExitLock=useRef(false);
   const [storeProducts,setStoreProducts]=useState<Product[]>(demoProducts);
   const [mainCategories,setMainCategories]=useState<MainCategory[]>([]);
-  const [debouncedQuery,setDebouncedQuery]=useState("");
-  const [searchOpen,setSearchOpen]=useState(false);
-  const [searchActive,setSearchActive]=useState(-1);
-  const searchRoot=useRef<HTMLDivElement>(null);
   const {items:globalCartItems,total,addItem}=useCart();
   const products=storeProducts;
   useEffect(()=>{let active=true;const reload=()=>fetchStoreProducts().then(data=>{if(active)setStoreProducts(data.length?data:demoProducts)}).catch(error=>console.error("Supabase products:",error));reload();const unsubscribe=subscribeToCatalog(reload);return()=>{active=false;unsubscribe()}},[]);
   useEffect(()=>{let active=true;fetchMainCategories().then(data=>{if(active)setMainCategories(data)}).catch(error=>console.error("Supabase categories:",error));return()=>{active=false}},[]);
-  useEffect(()=>{const timer=setTimeout(()=>setDebouncedQuery(query),250);return()=>clearTimeout(timer)},[query]);
-  useEffect(()=>{const close=(event:PointerEvent)=>{if(!searchRoot.current?.contains(event.target as Node)){setSearchOpen(false);setSearchActive(-1)}};const escape=(event:KeyboardEvent)=>{if(event.key==="Escape"){setSearchOpen(false);setSearchActive(-1)}};document.addEventListener("pointerdown",close);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",close);document.removeEventListener("keydown",escape)}},[]);
   const filtered=useMemo(()=>storeProducts.filter(p=>{
     const terms=normalizeSearch(query).split(/\s+/).filter(Boolean);const hay=searchableProductText(p);
     return (!terms.length||terms.every(term=>hay.includes(term)))&&categoryMatchesSelection(p.category,category,mainCategories)&&(brand==="Todas"||p.brand===brand)&&(!saleOnly||!!p.oldPrice)&&(!stockOnly||p.stock>0)&&(!min||p.price>=+min)&&(!max||p.price<=+max)
   }).sort((a,b)=>sort==="low"?a.price-b.price:sort==="high"?b.price-a.price:sort==="az"?a.name.localeCompare(b.name):(b.createdAt||"").localeCompare(a.createdAt||"")),[storeProducts,query,category,brand,saleOnly,stockOnly,min,max,sort,mainCategories]);
   const availableBrands=useMemo(()=>[...new Set(storeProducts.filter(product=>categoryMatchesSelection(product.category,category,mainCategories)).map(product=>product.brand))],[storeProducts,category,mainCategories]);
-  const autocompleteMatches=useMemo(()=>{const terms=normalizeSearch(debouncedQuery).split(/\s+/).filter(Boolean);if(!terms.length)return[];return storeProducts.filter(product=>{const haystack=searchableProductText(product);return terms.every(term=>haystack.includes(term))})},[storeProducts,debouncedQuery]);
-  const autocompleteResults=autocompleteMatches.slice(0,8);
   const brandLabel=(name:string)=>category==="Consolas"?(name==="Sony"?"PlayStation":name==="Microsoft"?"Xbox":name):name;
   const activeFilterCount=[category!=="Todos",brand!=="Todas",!!min,!!max,saleOnly,stockOnly].filter(Boolean).length;
   const cartItems=globalCartItems.map(item=>({...item,qty:item.quantity}));
   const add=(p:Product)=>{addItem(p);setToast(`${p.name} agregado`);setTimeout(()=>setToast(""),1800)};
-  const enterAdmin=()=>{sessionStorage.setItem(ADMIN_PANEL_ACTIVE_KEY,"true");setAdminExitError("");setView("admin")};
   const navigateToPublic=(destination:PublicDestination)=>{if(destination.kind==="product"){location.href=destination.href;return}if(destination.kind==="admin-login")return;setView("shop");if(destination.category)setCategory(destination.category);if(destination.saleOnly)setSaleOnly(true);if(destination.scrollCatalog)setTimeout(()=>document.getElementById("catalogo")?.scrollIntoView({behavior:"smooth",block:"start"}),20)};
   const handleExitAdmin=async(destination:PublicDestination)=>{if(adminExitLock.current)return;if(view!=="admin"){navigateToPublic(destination);return}adminExitLock.current=true;setAdminExitBusy(true);setAdminExitError("");try{const {error}=await supabase.auth.signOut();if(error)throw error;const {data,error:sessionError}=await supabase.auth.getSession();if(sessionError)throw sessionError;if(data.session)throw new Error("Supabase todavía conserva una sesión activa.");sessionStorage.removeItem(ADMIN_PANEL_ACTIVE_KEY);setAdmin(false);setLogin(current=>({...current,password:""}));navigateToPublic(destination)}catch(error){setAdminExitError(error instanceof Error?`No se pudo cerrar la sesión: ${error.message}`:"No se pudo cerrar la sesión. Intentá nuevamente.")}finally{adminExitLock.current=false;setAdminExitBusy(false)}};
   const openDetail=(p:Product)=>{const slug=p.slug||p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");void handleExitAdmin({kind:"product",href:`/producto/${slug}`})};
-  const showAllSearchResults=()=>{setSearchOpen(false);setSearchActive(-1);void handleExitAdmin({kind:"shop",category:"Todos",scrollCatalog:true});setBrand("Todas");setSaleOnly(false);setStockOnly(false);setMin("");setMax("")};
-  const searchKeyDown=(event:React.KeyboardEvent<HTMLInputElement>)=>{if(event.key==="Escape"){event.preventDefault();setSearchOpen(false);setSearchActive(-1);return}if(event.key==="ArrowDown"||event.key==="ArrowUp"){event.preventDefault();if(!searchOpen)setSearchOpen(true);if(!autocompleteResults.length)return;const direction=event.key==="ArrowDown"?1:-1;setSearchActive(current=>current<0?(direction>0?0:autocompleteResults.length-1):(current+direction+autocompleteResults.length)%autocompleteResults.length);return}if(event.key==="Enter"){event.preventDefault();if(searchActive>=0&&autocompleteResults[searchActive])openDetail(autocompleteResults[searchActive]);else showAllSearchResults()}};
   const wa=(p?:Product,customer?:Record<string,string>)=>{const lines=p?[`Hola NextLevel Tech, quiero comprar:`,`• ${p.name} — ${gs(p.price)}`]:["Hola NextLevel Tech, quiero realizar este pedido:",...cartItems.map(x=>`• ${x.name}\n  ${x.qty} × ${gs(x.price)} = ${gs(x.qty*x.price)}`),``,`TOTAL: ${gs(total)}`,``,`Nombre: ${customer?.nombre||""}`,`Teléfono: ${customer?.telefono||""}`,`Ciudad: ${customer?.ciudad||""}`,`Dirección: ${customer?.direccion||""}`,`Referencia: ${customer?.referencia||""}`,`Forma de pago: ${customer?.pago||""}`,`Retiro o delivery: ${customer?.entrega||""}`];window.open(`https://wa.me/595985993848?text=${encodeURIComponent(lines.join("\n"))}`,"_blank")};
   const advisor=()=>{const message=["Hola NextLevel Tech.","","Estoy interesado en recibir asesoramiento para elegir un producto.","","Me gustaría recibir información sobre:","","Computadoras","Notebooks","Componentes","Consolas","Otro:","","Muchas gracias."].join("\n");window.open(`https://wa.me/595985993848?text=${encodeURIComponent(message)}`,"_blank")};
   const validateAdminAccess=async(userId?:string)=>{let id=userId;if(!id){const {data,error}=await supabase.auth.getUser();if(error||!data.user){setAdmin(false);return false}id=data.user.id}const {data,error}=await supabase.from("profiles").select("role").eq("id",id).single();if(error||data?.role!=="admin"){await supabase.auth.signOut();setAdmin(false);return false}setAdmin(true);return true};
   const handleAdminLogin=async(e:React.FormEvent)=>{e.preventDefault();setLoginBusy(true);setLoginError("");const {data,error}=await supabase.auth.signInWithPassword(login);if(error||!data.user){setLoginError("Correo o contraseña incorrectos.");setLoginBusy(false);return}if(!await validateAdminAccess(data.user.id))setLoginError("Este usuario no tiene permisos de administrador.");setLoginBusy(false)};
-  useEffect(()=>{const navigation=performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming|undefined;const panelWasActive=sessionStorage.getItem(ADMIN_PANEL_ACTIVE_KEY)==="true"&&navigation?.type==="reload";const restorePanel=setTimeout(()=>{if(panelWasActive){setView("admin");void validateAdminAccess()}},0);const {data}=supabase.auth.onAuthStateChange((_event,session)=>{if(!session)setAdmin(false)});return()=>{clearTimeout(restorePanel);data.subscription.unsubscribe()}},[]);
+  useEffect(()=>{const navigation=performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming|undefined;const requestedAdmin=new URLSearchParams(location.search).get("admin")==="true";const panelWasActive=sessionStorage.getItem(ADMIN_PANEL_ACTIVE_KEY)==="true"&&navigation?.type==="reload";const restorePanel=setTimeout(()=>{if(requestedAdmin||panelWasActive){setView("admin");void validateAdminAccess()}},0);const {data}=supabase.auth.onAuthStateChange((_event,session)=>{if(!session)setAdmin(false)});return()=>{clearTimeout(restorePanel);data.subscription.unsubscribe()}},[]);
   return <div>
-    <div className="topline" aria-label="Beneficios de compra">
-      <div className="toplineTrack">
-        <div className="toplineGroup"><span className="toplineItem">Envíos a todo Paraguay<i/></span><span className="toplineItem">Pagá con tarjetas<i/></span><span className="toplineItem">Garantía en productos seleccionados<i/></span></div>
-        <div className="toplineGroup" aria-hidden="true"><span className="toplineItem">Envíos a todo Paraguay<i/></span><span className="toplineItem">Pagá con tarjetas<i/></span><span className="toplineItem">Garantía en productos seleccionados<i/></span></div>
-      </div>
-    </div>
-    <header><div className="nav">
-      <button className="hamb iconBtn" onClick={()=>setMenu(!menu)} aria-label="Abrir menú"><Menu/></button><button className="logo" disabled={adminExitBusy} onClick={()=>void handleExitAdmin({kind:"shop"})}><b>NL</b><span>NextLevel<small>TECH</small></span></button>
-      <nav className={menu?"show":""}><button disabled={adminExitBusy} onClick={()=>void handleExitAdmin({kind:"shop",category:"Todos"})}>Inicio</button><button disabled={adminExitBusy} onClick={()=>void handleExitAdmin({kind:"shop",category:"Todos",scrollCatalog:true})}>Productos</button><button disabled={adminExitBusy} onClick={()=>void handleExitAdmin({kind:"shop",saleOnly:true})}>Ofertas</button><button disabled={adminExitBusy} onClick={enterAdmin}>Administrar</button></nav>
-      <div className="search" ref={searchRoot}><Search/><input role="combobox" aria-label="Buscar productos" aria-autocomplete="list" aria-expanded={searchOpen&&!!query.trim()} aria-controls="product-search-results" aria-activedescendant={searchActive>=0?`search-result-${searchActive}`:undefined} disabled={adminExitBusy} value={query} onFocus={()=>{if(query.trim())setSearchOpen(true)}} onKeyDown={searchKeyDown} onChange={e=>{setQuery(e.target.value);void handleExitAdmin({kind:"shop"});setSearchOpen(!!e.target.value.trim());setSearchActive(-1)}} placeholder="Buscar producto, marca o categoría..."/>
-       {searchOpen&&!!query.trim()&&<div className="searchPanel" id="product-search-results" role="listbox">
-        {query.trim()!==debouncedQuery.trim()?<div className="searchStatus">Buscando productos…</div>:autocompleteResults.length?<><div className="searchResults">{autocompleteResults.map((product,index)=><button type="button" id={`search-result-${index}`} role="option" aria-selected={searchActive===index} className={`searchResult ${searchActive===index?"active":""}`} key={product.dbId||product.id} onMouseEnter={()=>setSearchActive(index)} onClick={()=>openDetail(product)}><img src={product.image} alt=""/><span className="searchResultInfo"><b>{product.name}</b><small>{product.brand} <i>•</i> {product.category}</small><em className={product.stock>0?"available":"unavailable"}>{product.stock>0?`${product.stock} disponibles`:"Agotado"}</em></span><span className="searchResultPrice"><b>{gs(product.price)}</b>{product.oldPrice&&<><small>{gs(product.oldPrice)}</small><em>OFERTA</em></>}</span></button>)}</div><button type="button" className="searchAll" onClick={showAllSearchResults}>Ver todos los resultados ({autocompleteMatches.length}) <ArrowRight/></button></>:<div className="searchStatus"><Search/><b>Sin coincidencias</b><span>Probá con otro nombre, marca o categoría.</span></div>}
-       </div>}
-      </div>
-      <CartButton/>
-    </div></header>
 
     {view==="shop"&&<main>
       <section className="hero"><div className="heroCopy"><span className="eyebrow">POTENCIÁ TU PRÓXIMO NIVEL</span><h1>Tecnología que juega <i>en serio.</i></h1><p>Equipos, componentes y periféricos seleccionados para rendir más. Asesoramiento experto y garantía local.</p><div><button className="primary" onClick={()=>document.getElementById("catalogo")?.scrollIntoView()}>Explorar productos <ArrowRight/></button><button className="ghost advisor" onClick={advisor}><FaWhatsapp/> Hablar con un asesor</button></div><div className="trust"><span><BadgeCheck/> Garantía local</span><span><Truck/> Envíos nacionales</span><span><ShieldCheck/> Compra segura</span></div></div><div className="heroImg"><img src="https://images.unsplash.com/photo-1598550476439-6847785fcea6?auto=format&fit=crop&w=1200&q=88" alt="Setup gamer profesional"/><div className="promo"><b>HASTA 15% OFF</b><small>en seleccionados</small></div></div></section>

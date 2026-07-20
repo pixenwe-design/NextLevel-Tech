@@ -2,12 +2,11 @@
 
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
-import {ArrowLeft,ArrowRight,ChevronRight,CreditCard,Home,PackageCheck,ShieldCheck,ShoppingCart,Truck} from "lucide-react";
+import {ArrowLeft,ArrowRight,CreditCard,PackageCheck,ShieldCheck,ShoppingCart,Truck} from "lucide-react";
 import {FaWhatsapp} from "react-icons/fa6";
 import {demoProducts,gs,type Product} from "../../page";
 import {fetchMainCategories,fetchStoreProducts,mainCategoryName,subscribeToCatalog,type MainCategory} from "../../../lib/store-data";
 import {useCart} from "../../cart-context";
-import {CartButton} from "../../cart-ui";
 
 const identity=(product:Product)=>product.dbId||String(product.id);
 const productSlug=(product:Product)=>product.slug||product.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
@@ -25,8 +24,6 @@ export default function ProductDetail({slug}:{slug:string}){
  if(loading)return <main className="detail section"><div className="empty"><b>Cargando producto…</b></div></main>;
  if(!product)return <main className="detail section"><div className="empty"><b>Producto no encontrado</b><p>El producto solicitado no existe o ya no está disponible.</p><Link className="primary" href="/">Volver a la tienda</Link></div></main>;
  const whatsapp=()=>window.open(`https://wa.me/595985993848?text=${encodeURIComponent(`Hola NextLevel Tech, quiero comprar:\n• ${product.name} — ${gs(product.price)}`)}`,"_blank");
- const mobileCategory=mainCategoryName(product.category,mainCategories);
-
  return <>
   <div className="productHeaderSection">
   <section className="productHero productHeader">
@@ -35,16 +32,9 @@ export default function ProductDetail({slug}:{slug:string}){
    <div className="productHeaderCircuits"><i/><i/><i/><i/></div>
    <div className="productHeroInner">
     <div className="productHeaderCopy">
-     <div className="productHeaderActions"><Link className="headerBackLink" href="/"><ArrowLeft/> Volver al catálogo</Link><CartButton/></div>
      <span className="productHeroLabel">NEXTLEVEL TECH</span>
      <h2>Tecnología que impulsa<br/>tu <span>rendimiento</span></h2>
      <p>Componentes, equipos y accesorios seleccionados para crear un setup más potente.</p>
-     <nav className="productBreadcrumb" aria-label="Ruta de navegación">
-      <Link className="breadcrumbPill" href="/"><Home/> Inicio</Link><ChevronRight className="breadcrumbSeparator"/>
-      <Link className="breadcrumbPill" href="/">Productos</Link><ChevronRight className="breadcrumbSeparator"/>
-      <span className="breadcrumbPill">{product.category}</span><ChevronRight className="breadcrumbSeparator"/>
-      <b className="breadcrumbCurrent">{product.name}</b>
-     </nav>
     </div>
     <div className="productHeaderRight">
      <div className="productHeaderVisual" aria-hidden="true">
@@ -56,14 +46,9 @@ export default function ProductDetail({slug}:{slug:string}){
     </div>
    </div>
   </section>
-  <div className="mobileProductHeaderNav">
-   <Link className="mobileProductBack" href="/"><ArrowLeft/> Volver</Link>
-   <nav aria-label="Ruta de navegación resumida">
-    <Link href="/">Productos</Link><ChevronRight/><span>{mobileCategory}</span>
-   </nav>
-  </div>
   </div>
   <main className="detail section">
+   <Link className="back detailBack" href="/categoria/todas"><ArrowLeft/> Volver al catálogo</Link>
    <div className="detailGrid">
     <div className="gallery"><img src={product.image} alt={product.name}/><div>{(product.gallery?.length?product.gallery:[product.image]).map((image,index)=><button key={`${image}-${index}`}><img src={image} alt={`Vista ${index+1} de ${product.name}`}/></button>)}</div></div>
     <div className="info"><span className="stock"><PackageCheck/>{product.stock>0?`Disponible · ${product.stock} unidades`:"Agotado"}</span><p className="brand">{product.brand} / {product.category}</p><h1>{product.name}</h1><div className="price">{gs(product.price)} {product.oldPrice&&<><del>{gs(product.oldPrice)}</del><em>-{Math.round((1-product.price/product.oldPrice)*100)}%</em></>}</div><p>{product.description}</p><div className="qty"><span>Cantidad</span><button onClick={()=>setQuantity(value=>Math.max(1,value-1))} aria-label="Disminuir cantidad">−</button><b>{quantity}</b><button onClick={()=>setQuantity(value=>Math.min(product.stock,value+1))} aria-label="Aumentar cantidad">+</button></div><button className="primary wide" onClick={()=>addItem(product,quantity)} disabled={!product.stock}><ShoppingCart/> Agregar al carrito</button><button className="wa wide" onClick={whatsapp}><FaWhatsapp/> Comprar por WhatsApp</button><div className="micro"><span><ShieldCheck/><b>Garantía local</b><small>{product.warranty}</small></span><span><Truck/><b>Delivery nacional</b><small>A todo Paraguay</small></span><span><CreditCard/><b>Pago flexible</b><small>Consultá opciones</small></span></div></div>

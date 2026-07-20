@@ -48,7 +48,11 @@ body{font-size:15px;line-height:1.55}.iconBtn{display:inline-grid;place-items:ce
   .catalogResultsBar .sorter{align-items:stretch;flex-direction:column;gap:7px;width:100%}
   .catalogResultsBar .sortControl,.catalogResultsBar .sortControl select{width:100%}
 }
-.productHeaderActions{display:flex;align-items:center;justify-content:space-between;gap:18px}.productHeaderActions .cartBtn{flex:0 0 46px}.cart{width:94vw;max-width:440px}
+.cart{width:94vw;max-width:440px}
+.siteHeader .nav nav a{display:flex;align-items:center;min-height:44px;border:0;background:none;color:#aeb6c9;font-size:14px;text-decoration:none}.siteHeader .nav nav a:hover,.siteHeader .nav nav a.active{color:#fff}.siteHeader .nav nav a.active{position:relative}.siteHeader .nav nav a.active:after{content:"";position:absolute;right:0;bottom:4px;left:0;height:2px;border-radius:2px;background:#7047ff}.headerActions{display:flex;align-items:center;gap:8px}.globalSearch{position:relative}.globalSearch .searchPanel{left:0;right:0;top:calc(100% + 8px)}.globalSearch .searchResult{text-decoration:none}.detailBack{display:inline-flex;align-items:center;gap:8px;min-height:44px;text-decoration:none}.detailBack svg{width:18px}
+@media(max-width:900px){.siteHeader .nav nav a{padding:5px 12px}.siteHeader .nav nav a.active:after{top:8px;right:auto;bottom:8px;left:0;width:2px;height:auto}.siteHeader .hamb{display:inline-grid;width:44px;height:44px}.siteHeader .cartBtn{min-width:46px;min-height:44px}}
+@media(max-width:600px){.siteHeader{height:126px}.siteHeader .nav{height:126px;min-height:126px;flex-wrap:wrap;align-content:center;padding:8px 13px;gap:8px}.siteHeader .logo{order:1;min-width:44px;min-height:44px}.siteHeader .logo>span{display:block}.siteHeader .headerActions{order:2;margin-left:auto}.siteHeader .globalSearch{order:3;width:100%;height:46px;flex:0 0 100%}.siteHeader .nav nav{top:126px}.siteHeader .cartBtn,.siteHeader .hamb{width:44px;height:44px}.siteHeader .cartBtn em{right:-3px;top:-5px;min-width:20px}.globalSearch .searchPanel{max-height:55vh;overflow:auto}}
+@media(max-width:380px){.siteHeader .logo>span{display:none}}
 .mobileCatalogBar{display:contents}.mobileFilterButton,.mobileFilterClose,.mobileApplyFilters,.mobileFilterOverlay{display:none}
 
 @media(max-width:600px){
