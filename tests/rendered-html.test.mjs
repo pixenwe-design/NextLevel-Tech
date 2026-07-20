@@ -26,8 +26,15 @@ test("includes protected Supabase data model and RLS", () => {
 test("keeps admin auth scoped to the active panel tab", () => {
   assert.match(supabaseClient, /persistSession:\s*true/);
   assert.match(supabaseClient, /window\.sessionStorage/);
+  assert.match(supabaseClient, /storageKey:\s*getAdminAuthStorageKey\(\)/);
+  assert.match(supabaseClient, /navigation\?\.type === "reload"/);
+  assert.match(supabaseClient, /window\.crypto\.randomUUID\(\)/);
   assert.doesNotMatch(supabaseClient, /window\.localStorage/);
   assert.match(page, /ADMIN_PANEL_ACTIVE_KEY/);
-  assert.match(page, /leaveAdmin=async[\s\S]*supabase\.auth\.signOut\(\)/);
-  assert.match(page, /panelWasActive[\s\S]*setView\("admin"\)/);
+  assert.match(page, /handleExitAdmin=async[\s\S]*await supabase\.auth\.signOut\(\)/);
+  assert.match(page, /await supabase\.auth\.getSession\(\)/);
+  assert.match(page, /adminExitLock\.current/);
+  assert.match(page, /validateAdminAccess=async[\s\S]*profiles[\s\S]*role/);
+  assert.match(page, /navigation\?\.type==="reload"/);
+  assert.doesNotMatch(page, /leaveAdmin/);
 });
