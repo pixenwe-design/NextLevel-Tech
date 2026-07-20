@@ -10,6 +10,15 @@ if (!supabaseUrl || !supabaseKey) {
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
+    storage: {
+      getItem: (key) => typeof window === "undefined" ? null : window.sessionStorage.getItem(key),
+      setItem: (key, value) => {
+        if (typeof window !== "undefined") window.sessionStorage.setItem(key, value);
+      },
+      removeItem: (key) => {
+        if (typeof window !== "undefined") window.sessionStorage.removeItem(key);
+      },
+    },
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
