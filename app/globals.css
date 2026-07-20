@@ -48,6 +48,7 @@ body{font-size:15px;line-height:1.55}.iconBtn{display:inline-grid;place-items:ce
   .catalogResultsBar .sorter{align-items:stretch;flex-direction:column;gap:7px;width:100%}
   .catalogResultsBar .sortControl,.catalogResultsBar .sortControl select{width:100%}
 }
+.productHeaderActions{display:flex;align-items:center;justify-content:space-between;gap:18px}.productHeaderActions .cartBtn{flex:0 0 46px}.cart{width:94vw;max-width:440px}
 .mobileCatalogBar{display:contents}.mobileFilterButton,.mobileFilterClose,.mobileApplyFilters,.mobileFilterOverlay{display:none}
 
 @media(max-width:600px){

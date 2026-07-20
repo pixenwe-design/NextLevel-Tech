@@ -13,6 +13,8 @@ import { FaWhatsapp } from "react-icons/fa6";
 import { categoryMatchesSelection, fetchMainCategories, fetchStoreBrands, fetchStoreProducts, subscribeToCatalog, type MainCategory, type StoreBrand } from "../lib/store-data";
 import { deleteProduct, saveProduct, type ProductInput } from "../lib/store-admin";
 import { supabase } from "../lib/supabase";
+import {useCart} from "./cart-context";
+import {CartButton} from "./cart-ui";
 
 export type Product = {
   id: number; name: string; brand: string; category: string; price: number; oldPrice?: number;
@@ -56,23 +58,20 @@ export default function Home() {
   const [detail,setDetail]=useState<Product|null>(null);
   const [query,setQuery]=useState(""); const [category,setCategory]=useState("Todos"); const [brand,setBrand]=useState("Todas");
   const [saleOnly,setSaleOnly]=useState(false); const [stockOnly,setStockOnly]=useState(false); const [sort,setSort]=useState("recent");
-  const [min,setMin]=useState(""); const [max,setMax]=useState(""); const [cartOpen,setCartOpen]=useState(false);
-  const [cart,setCart]=useState<Record<number,number>>({}); const [menu,setMenu]=useState(false);
+  const [min,setMin]=useState(""); const [max,setMax]=useState(""); const [menu,setMenu]=useState(false);
   const [mobileFiltersOpen,setMobileFiltersOpen]=useState(false);
   const [admin,setAdmin]=useState(false); const [login,setLogin]=useState({email:"",password:""}); const [loginError,setLoginError]=useState(""); const [loginBusy,setLoginBusy]=useState(false); const [toast,setToast]=useState("");
   const [adminExitBusy,setAdminExitBusy]=useState(false); const [adminExitError,setAdminExitError]=useState(""); const adminExitLock=useRef(false);
-  const [checkout,setCheckout]=useState(false);
   const [storeProducts,setStoreProducts]=useState<Product[]>(demoProducts);
   const [mainCategories,setMainCategories]=useState<MainCategory[]>([]);
   const [debouncedQuery,setDebouncedQuery]=useState("");
   const [searchOpen,setSearchOpen]=useState(false);
   const [searchActive,setSearchActive]=useState(-1);
   const searchRoot=useRef<HTMLDivElement>(null);
+  const {items:globalCartItems,total,addItem}=useCart();
   const products=storeProducts;
   useEffect(()=>{let active=true;const reload=()=>fetchStoreProducts().then(data=>{if(active)setStoreProducts(data.length?data:demoProducts)}).catch(error=>console.error("Supabase products:",error));reload();const unsubscribe=subscribeToCatalog(reload);return()=>{active=false;unsubscribe()}},[]);
   useEffect(()=>{let active=true;fetchMainCategories().then(data=>{if(active)setMainCategories(data)}).catch(error=>console.error("Supabase categories:",error));return()=>{active=false}},[]);
-  useEffect(()=>{const timer=setTimeout(()=>{try{setCart(JSON.parse(localStorage.getItem("nlt-cart")||"{}"))}catch{}},0);return()=>clearTimeout(timer)},[]);
-  useEffect(()=>{localStorage.setItem("nlt-cart",JSON.stringify(cart))},[cart]);
   useEffect(()=>{const timer=setTimeout(()=>setDebouncedQuery(query),250);return()=>clearTimeout(timer)},[query]);
   useEffect(()=>{const close=(event:PointerEvent)=>{if(!searchRoot.current?.contains(event.target as Node)){setSearchOpen(false);setSearchActive(-1)}};const escape=(event:KeyboardEvent)=>{if(event.key==="Escape"){setSearchOpen(false);setSearchActive(-1)}};document.addEventListener("pointerdown",close);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",close);document.removeEventListener("keydown",escape)}},[]);
   const filtered=useMemo(()=>storeProducts.filter(p=>{
@@ -84,8 +83,8 @@ export default function Home() {
   const autocompleteResults=autocompleteMatches.slice(0,8);
   const brandLabel=(name:string)=>category==="Consolas"?(name==="Sony"?"PlayStation":name==="Microsoft"?"Xbox":name):name;
   const activeFilterCount=[category!=="Todos",brand!=="Todas",!!min,!!max,saleOnly,stockOnly].filter(Boolean).length;
-  const cartItems=storeProducts.filter(p=>cart[p.id]).map(p=>({...p,qty:cart[p.id]})); const total=cartItems.reduce((s,p)=>s+p.price*p.qty,0); const count=Object.values(cart).reduce((a,b)=>a+b,0);
-  const add=(p:Product)=>{setCart(c=>({...c,[p.id]:Math.min((c[p.id]||0)+1,p.stock)}));setCartOpen(true);setToast(`${p.name} agregado`);setTimeout(()=>setToast(""),1800)};
+  const cartItems=globalCartItems.map(item=>({...item,qty:item.quantity}));
+  const add=(p:Product)=>{addItem(p);setToast(`${p.name} agregado`);setTimeout(()=>setToast(""),1800)};
   const enterAdmin=()=>{sessionStorage.setItem(ADMIN_PANEL_ACTIVE_KEY,"true");setAdminExitError("");setView("admin")};
   const navigateToPublic=(destination:PublicDestination)=>{if(destination.kind==="product"){location.href=destination.href;return}if(destination.kind==="admin-login")return;setView("shop");if(destination.category)setCategory(destination.category);if(destination.saleOnly)setSaleOnly(true);if(destination.scrollCatalog)setTimeout(()=>document.getElementById("catalogo")?.scrollIntoView({behavior:"smooth",block:"start"}),20)};
   const handleExitAdmin=async(destination:PublicDestination)=>{if(adminExitLock.current)return;if(view!=="admin"){navigateToPublic(destination);return}adminExitLock.current=true;setAdminExitBusy(true);setAdminExitError("");try{const {error}=await supabase.auth.signOut();if(error)throw error;const {data,error:sessionError}=await supabase.auth.getSession();if(sessionError)throw sessionError;if(data.session)throw new Error("Supabase todavía conserva una sesión activa.");sessionStorage.removeItem(ADMIN_PANEL_ACTIVE_KEY);setAdmin(false);setLogin(current=>({...current,password:""}));navigateToPublic(destination)}catch(error){setAdminExitError(error instanceof Error?`No se pudo cerrar la sesión: ${error.message}`:"No se pudo cerrar la sesión. Intentá nuevamente.")}finally{adminExitLock.current=false;setAdminExitBusy(false)}};
@@ -112,7 +111,7 @@ export default function Home() {
         {query.trim()!==debouncedQuery.trim()?<div className="searchStatus">Buscando productos…</div>:autocompleteResults.length?<><div className="searchResults">{autocompleteResults.map((product,index)=><button type="button" id={`search-result-${index}`} role="option" aria-selected={searchActive===index} className={`searchResult ${searchActive===index?"active":""}`} key={product.dbId||product.id} onMouseEnter={()=>setSearchActive(index)} onClick={()=>openDetail(product)}><img src={product.image} alt=""/><span className="searchResultInfo"><b>{product.name}</b><small>{product.brand} <i>•</i> {product.category}</small><em className={product.stock>0?"available":"unavailable"}>{product.stock>0?`${product.stock} disponibles`:"Agotado"}</em></span><span className="searchResultPrice"><b>{gs(product.price)}</b>{product.oldPrice&&<><small>{gs(product.oldPrice)}</small><em>OFERTA</em></>}</span></button>)}</div><button type="button" className="searchAll" onClick={showAllSearchResults}>Ver todos los resultados ({autocompleteMatches.length}) <ArrowRight/></button></>:<div className="searchStatus"><Search/><b>Sin coincidencias</b><span>Probá con otro nombre, marca o categoría.</span></div>}
        </div>}
       </div>
-      <button className="cartBtn" onClick={()=>setCartOpen(true)} aria-label="Abrir carrito"><ShoppingCart/><em>{count}</em></button>
+      <CartButton/>
     </div></header>
 
     {view==="shop"&&<main>
@@ -132,8 +131,6 @@ export default function Home() {
 
     {view==="admin"&&<main className="admin">{adminExitError&&<p className="loginError" role="alert">{adminExitError}</p>}{!admin?<div className="login"><div className="logo big"><b>NL</b><span>NextLevel<small>TECH ADMIN</small></span></div><h1>Panel administrativo</h1><p>Acceso exclusivo para administradores.</p><form onSubmit={handleAdminLogin}><label>Correo electrónico<input type="email" required value={login.email} onChange={e=>setLogin({...login,email:e.target.value})} placeholder="administrador@correo.com"/></label><label>Contraseña<input type="password" required value={login.password} onChange={e=>setLogin({...login,password:e.target.value})} placeholder="••••••••"/></label>{loginError&&<p className="loginError">{loginError}</p>}<button className="primary wide" disabled={loginBusy}>{loginBusy?"Verificando...":"Iniciar sesión"}</button><small>La sesión y el rol se validan de forma segura con Supabase.</small></form></div>:<Admin onExit={()=>void handleExitAdmin({kind:"admin-login"})} exitBusy={adminExitBusy}/>}</main>}
 
-    <aside className={`cart ${cartOpen?"open":""}`}><div className="cartHead"><div><span>MI CARRITO</span><b>{count} {count===1?"producto":"productos"}</b></div><button className="iconBtn" onClick={()=>setCartOpen(false)} aria-label="Cerrar carrito"><X/></button></div><div className="cartBody">{cartItems.length?cartItems.map(p=><div className="cartItem" key={p.id}><img src={p.image} alt=""/><div><b>{p.name}</b><span>{gs(p.price)}</span><div className="step"><button onClick={()=>setCart(c=>({...c,[p.id]:Math.max(1,c[p.id]-1)}))}>−</button><em>{p.qty}</em><button onClick={()=>setCart(c=>({...c,[p.id]:Math.min(p.stock,c[p.id]+1)}))}><Plus/></button><button className="remove" onClick={()=>setCart(c=>{const n={...c};delete n[p.id];return n})}><Trash2/> Eliminar</button></div></div></div>):<div className="emptyCart"><span><ShoppingCart/></span><b>Tu carrito está vacío</b><p>Agregá productos para comenzar.</p></div>}</div>{cartItems.length>0&&<div className="cartFoot"><div><span>Subtotal</span><b>{gs(total)}</b></div><small>El costo de envío se coordina por WhatsApp.</small><button className="wa wide" onClick={()=>setCheckout(true)}><FaWhatsapp/> Finalizar por WhatsApp</button><button className="clear" onClick={()=>setCart({})}><Trash2/> Vaciar carrito</button></div>}</aside>{cartOpen&&<button className="overlay" onClick={()=>setCartOpen(false)}/>}
-    {checkout&&<div className="modalWrap"><form className="checkout" onSubmit={e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string,string>;setCheckout(false);wa(undefined,data)}}><button type="button" className="x" onClick={()=>setCheckout(false)}>×</button><span className="eyebrow">DATOS PARA EL PEDIDO</span><h2>Ya casi está</h2><div className="formGrid"><label>Nombre<input name="nombre" required/></label><label>Teléfono<input name="telefono" required/></label><label>Ciudad<input name="ciudad" required/></label><label>Dirección<input name="direccion" required/></label><label>Referencia<input name="referencia"/></label><label>Forma de pago<select name="pago"><option>Transferencia</option><option>Efectivo</option><option>Tarjeta</option></select></label><label>Entrega<select name="entrega"><option>Delivery</option><option>Retiro del local</option></select></label></div><button className="wa wide">Continuar en WhatsApp</button></form></div>}
     {toast&&<div className="toast"><Check/> {toast}</div>}<button className="floatWa" onClick={advisor} aria-label="WhatsApp"><FaWhatsapp/></button>
     <footer><div className="logo"><b>NL</b><span>NextLevel<small>TECH</small></span></div><p>Tecnología, gaming y potencia para tu próximo nivel.</p><div><b>TIENDA</b><span>Productos</span><span>Ofertas</span><span>Delivery nacional</span></div><div><b>CONTACTO</b><span>+595 985 993 848</span><span>Asunción, Paraguay</span><span>Lun–Sáb · 08:00 a 18:00</span></div><small>© 2026 NextLevel Tech · Creado por PixenWeb</small></footer>
   </div>

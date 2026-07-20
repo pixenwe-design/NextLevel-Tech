@@ -3,15 +3,19 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+const cartContext = await readFile(new URL("../app/cart-context.tsx", import.meta.url), "utf8");
+const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
 const supabaseClient = await readFile(new URL("../lib/supabase.ts", import.meta.url), "utf8");
 const schema = await readFile(new URL("../supabase/schema.sql", import.meta.url), "utf8");
 
 test("includes core storefront and checkout capabilities", () => {
   assert.match(page, /Buscar producto, marca o categoría/);
-  assert.match(page, /nlt-cart/);
+  assert.match(cartContext, /STORAGE_KEY="nlt-cart"/);
+  assert.match(cartContext, /if\(!hydrated\)return/);
+  assert.match(layout, /<CartProvider>/);
   assert.match(page, /wa\.me\/595985993848/);
   assert.match(page, /Nombre: \$\{customer\?\.nombre/);
-  assert.match(page, /Respet|Math\.min\(p\.stock/);
+  assert.match(cartContext, /Math\.min\(item\.stock\|\|Infinity/);
 });
 
 test("includes protected Supabase data model and RLS", () => {
